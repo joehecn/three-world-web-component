@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en-GB">
+
+<head>
+  <meta charset="utf-8">
+  <style>
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+    }
+
+    body {
+      background: #fafafa;
+    }
+
+    #demo {
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="demo"></div>
+
+  <script type="module">
+    import { html, render } from 'lit';
+    import '../dist/src/three-world.js';
+
+    // const header = 'Hello owc World!';
+    // render(
+    //   html`
+    //     <three-world .header=${header}>
+    //       some light-dom
+    //     </three-world>
+    //   `,
+    //   document.querySelector('#demo')
+    // );
+    render(
+      html`
+        <three-world></three-world>
+      `,
+      document.querySelector('#demo')
+    );
+  </script>
+</body>
+
+</html>
