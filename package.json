@@ -2,6 +2,18 @@
   "name": "three-world-web-component",
   "description": "Webcomponent three-world following open-wc recommendations",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joehecn/three-world-web-component.git"
+  },
+  "bugs": {
+    "url": "https://github.com/joehecn/three-world-web-component/issues"
+  },
+  "homepage": "https://github.com/joehecn/three-world-web-component#readme",
+  "keywords": [
+    "Webcomponent",
+    "threejs"
+  ],
   "author": "leanbrown@live.cn",
   "version": "0.0.1",
   "main": "dist/src/index.js",

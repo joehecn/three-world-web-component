@@ -1,6 +1,7 @@
 # \<three-world-web-component>
 
 ## Demo
+[storybook](https://joehecn.github.io/three-world-web-component/iframe.html?id=expressionvisualizerwebcomponent--regular&args=&viewMode=story)
 
 This webcomponent follows the [open-wc](https://github.com/open-wc/open-wc) recommendation.
 
