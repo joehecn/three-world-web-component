@@ -1,5 +1,10 @@
 # \<three-world-web-component>
 
+```bash
+npx gltf-pipeline -i assets/tw/glb/u1.gltf -o assets/tw/glb/u1Draco.gltf -d
+npx gltf-pipeline -i assets/tw/glb/u1Draco.gltf -o assets/tw/glb/u1Draco.glb
+```
+
 ## Demo
 [storybook](https://joehecn.github.io/three-world-web-component/iframe.html?id=threeworld--regular&args=&viewMode=story)
 
