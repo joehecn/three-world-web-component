@@ -1,0 +1,13 @@
+{
+  "version": 3,
+  "file": "building.js",
+  "sourceRoot": "",
+  "sources": [
+    "../../../../../src/world/components/building/building.ts"
+  ],
+  "names": [],
+  "mappings": "AAAA,OAAO,EAAE,UAAU,EAAE,MAAM,0CAA0C,CAAC;AAEtE,OAAO,EAAE,UAAU,EAAE,MAAM,kBAAkB,CAAC;AAE9C,MAAM,CAAC,KAAK,UAAU,YAAY;IAChC,MAAM,MAAM,GAAG,IAAI,UAAU,EAAE,CAAC;IAChC,MAAM,IAAI,GAAG,MAAM,MAAM,CAAC,SAAS,CAAC,6BAA6B,CAAC,CAAC;IAEnE,0CAA0C;IAE1C,MAAM,QAAQ,GAAG,UAAU,CAAC,IAAI,CAAC,CAAC;IAClC,0CAA0C;IAE1C,OAAO,QAAQ,CAAC;AAClB,CAAC",
+  "sourcesContent": [
+    "import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';\n\nimport { setupModel } from './setup-model.js';\n\nexport async function loadBuilding() {\n  const loader = new GLTFLoader();\n  const data = await loader.loadAsync('/three-world-web-component/assets/tw/glb/building.glb');\n\n  // console.log('---- loadBuilding', data);\n\n  const building = setupModel(data);\n  // console.log('---- building', building);\n\n  return building;\n}\n"
+  ]
+}

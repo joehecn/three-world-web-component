@@ -1,0 +1,1 @@
+{"version":3,"file":"setup-model.js","sourceRoot":"","sources":["../../../../../src/world/components/building/setup-model.ts"],"names":[],"mappings":"AAAA,MAAM,UAAU,UAAU,CAAC,IAAS;IAClC,wCAAwC;IACxC,OAAO,IAAI,CAAC,KAAK,CAAC;AACpB,CAAC","sourcesContent":["export function setupModel(data: any) {\n  // console.log('---- setupModel', data);\n  return data.scene;\n}\n"]}
