@@ -122,8 +122,12 @@ export class World {
     resizer.addEventListener(
       'resizer-render',
       ({ clientWidth, clientHeight, needRender }) => {
-        this._renderer.setSize(clientWidth, clientHeight, false);
-        if (needRender) this.render();
+        this._renderer.setSize(
+          clientWidth as number,
+          clientHeight as number,
+          false
+        );
+        if (needRender as boolean) this.render();
       }
     );
     resizer.init();
