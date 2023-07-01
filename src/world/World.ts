@@ -1,23 +1,26 @@
-import { DirectionalLightHelper, CameraHelper } from 'three';
-
 import * as THREE from 'three';
 
-import GUI from 'lil-gui';
 import {
   createScene,
   createLights,
-  // Node,
   createCamera,
   loadBuilding,
 } from './components/index.js';
 
 import {
+  DirectionalLightHelper,
+  CameraHelper,
+  AxesHelper,
+} from './helpers/index.js';
+
+import {
   createRenderer,
   createControls,
-  Resizer,
-  ColorGUIHelper,
-  MinMaxGUIHelper,
+  getUniqueResizer,
 } from './systems/index.js';
+
+import type { ToolData, Tree } from './type.js';
+import { getUniqueGui } from './guis/index.js';
 
 function __setScissorForElement(
   canvas: HTMLCanvasElement,
@@ -64,132 +67,50 @@ export class World {
 
   private _cameraHelper: THREE.CameraHelper;
 
+  private _axesHelper: THREE.AxesHelper;
+
+  private _tree: Tree[];
+
   constructor(
     canvas: HTMLCanvasElement,
     mainView: HTMLDivElement,
     secondView: HTMLDivElement,
-    controlView: HTMLDivElement
+    controlView: HTMLDivElement,
+    tree: Tree[]
   ) {
     this._mainView = mainView;
     this._secondView = secondView;
+    this._tree = tree;
 
     this._renderer = createRenderer(canvas);
     this._scene = createScene();
 
     const { mainLight, secondLight } = createLights();
 
-    let aspect = 2;
-
-    {
-      const { left, positiveYUpBottom, width, height } = __setScissorForElement(
-        this._renderer.domElement,
-        this._mainView
-      );
-
-      aspect = width / height;
-
-      this._mainCamera = createCamera(
-        [75, aspect, 1, 300] // option: [fov, aspect, near, far]
-      );
-
-      this._renderer.setScissor(left, positiveYUpBottom, width, height);
-      this._renderer.setViewport(left, positiveYUpBottom, width, height);
-    }
-
-    {
-      this._secondView.style.height = `${
-        this._secondView.clientWidth / aspect
-      }px`;
-
-      const { left, positiveYUpBottom, width, height } = __setScissorForElement(
-        this._renderer.domElement,
-        this._secondView
-      );
-
-      this._secondCamera = createCamera(
-        [120, aspect, 1, 300], // option: [fov, aspect, near, far]
-        [-90, 300, 30] // position: [x, y, z]
-      );
-
-      this._renderer.setScissor(left, positiveYUpBottom, width, height);
-      this._renderer.setViewport(left, positiveYUpBottom, width, height);
-    }
-
-    const gui = new GUI({
-      container: controlView,
-      width: 400,
-      // title: 'Config',
-      injectStyles: false,
-    });
-
-    const lightsFolder = gui.addFolder('Lights');
-    const mainLightFolder = lightsFolder.addFolder('Main Light');
-    // Option
-    const mainLightOptionFolder = mainLightFolder.addFolder('Option');
-    mainLightOptionFolder
-      .addColor(new ColorGUIHelper(mainLight, 'color'), 'value')
-      .name('Color')
-      .onChange(this.render.bind(this));
-    mainLightOptionFolder
-      .add(mainLight, 'intensity', 0, 2, 0.01)
-      .onChange(this.render.bind(this));
-    // Position
-    const mainLightPositionFolder = mainLightFolder.addFolder('Position');
-    mainLightPositionFolder
-      .add(mainLight.position, 'x', -400, 400, 1)
-      .onChange(this.render.bind(this));
-    mainLightPositionFolder
-      .add(mainLight.position, 'y', -400, 400, 1)
-      .onChange(this.render.bind(this));
-    mainLightPositionFolder
-      .add(mainLight.position, 'z', -400, 400, 1)
-      .onChange(this.render.bind(this));
-
-    const secondLightFolder = lightsFolder.addFolder('Second Light');
-    secondLightFolder
-      .addColor(new ColorGUIHelper(secondLight, 'color'), 'value')
-      .name('Sky Color')
-      .onChange(this.render.bind(this));
-    secondLightFolder
-      .addColor(new ColorGUIHelper(secondLight, 'groundColor'), 'value')
-      .name('Ground Color')
-      .onChange(this.render.bind(this));
-    secondLightFolder
-      .add(secondLight, 'intensity', 0, 2, 0.01)
-      .onChange(this.render.bind(this));
-
-    const minMaxGUIHelper = new MinMaxGUIHelper(
-      this._mainCamera,
-      'near',
-      'far',
-      0.1
+    const { width, height } = __setScissorForElement(
+      this._renderer.domElement,
+      this._mainView
     );
 
-    const cameraFolder = gui.addFolder('Camera');
-    // Option
-    const cameraOptionFolder = cameraFolder.addFolder('Option');
-    cameraOptionFolder
-      .add(this._mainCamera, 'fov', 1, 180)
-      .onChange(this.render.bind(this));
-    cameraOptionFolder
-      .add(minMaxGUIHelper, 'min', 0.1, 10, 0.1)
-      .name('near')
-      .onChange(this.render.bind(this));
-    cameraOptionFolder
-      .add(minMaxGUIHelper, 'max', 0.1, 600, 0.1)
-      .name('far')
-      .onChange(this.render.bind(this));
-    // Position
-    const cameraPositionFolder = cameraFolder.addFolder('Position');
-    cameraPositionFolder
-      .add(this._mainCamera.position, 'x', -300, 300, 0.1)
-      .onChange(this.render.bind(this));
-    cameraPositionFolder
-      .add(this._mainCamera.position, 'y', -300, 300, 0.1)
-      .onChange(this.render.bind(this));
-    cameraPositionFolder
-      .add(this._mainCamera.position, 'z', -300, 300, 0.1)
-      .onChange(this.render.bind(this));
+    const aspect = width / height;
+
+    this._mainCamera = createCamera(
+      [75, aspect, 1, 300] // option: [fov, aspect, near, far]
+    );
+
+    this._secondCamera = createCamera(
+      [120, aspect, 1, 300], // option: [fov, aspect, near, far]
+      [-90, 300, 30] // position: [x, y, z]
+    );
+
+    const gui = getUniqueGui(
+      controlView,
+      mainLight,
+      secondLight,
+      this._mainCamera,
+      tree
+    );
+    gui.addEventListener('gui-change', this.render.bind(this));
 
     const mainControls = createControls(this._mainCamera, mainView);
     mainControls.addEventListener('change', this.render.bind(this));
@@ -197,36 +118,51 @@ export class World {
     const secondControls = createControls(this._secondCamera, secondView);
     secondControls.addEventListener('change', this.render.bind(this));
 
-    // const _node = new Node();
-    // _node.addEventListener('load-ok', () => {
-    //   console.log('---- load-ok');
-    //   this.render();
-    // });
-
-    const resizer = new Resizer(this._renderer);
-    resizer.addEventListener('window-resize', this.render.bind(this));
+    const resizer = getUniqueResizer(this._renderer.domElement);
+    resizer.addEventListener(
+      'resizer-render',
+      ({ clientWidth, clientHeight, needRender }) => {
+        this._renderer.setSize(clientWidth, clientHeight, false);
+        if (needRender) this.render();
+      }
+    );
+    resizer.init();
 
     this._lightHelper = new DirectionalLightHelper(mainLight);
     this._cameraHelper = new CameraHelper(this._mainCamera);
+    this._axesHelper = new AxesHelper(500);
+    this._axesHelper.visible = false;
 
     this._scene.add(
       mainLight,
       secondLight,
       this._lightHelper,
-      this._cameraHelper
+      this._cameraHelper,
+      this._axesHelper
     );
   }
 
   public async init() {
     const building = await loadBuilding();
     this._scene.add(building);
+
     this.render();
   }
 
-  public render() {
+  public toolAction(toolData: ToolData) {
+    // console.log(toolData);
+    const { group, actived } = toolData;
+
+    if (group === 'setting') {
+      this._axesHelper.visible = !!actived;
+      this.render();
+    }
+  }
+
+  protected render() {
     this._renderer.setScissorTest(true);
 
-    let aspect = 2;
+    let aspect: number;
 
     {
       const { left, positiveYUpBottom, width, height } = __setScissorForElement(
@@ -267,20 +203,10 @@ export class World {
       this._lightHelper.visible = true;
       this._cameraHelper.visible = true;
 
-      // this._scene!.background.set(0x000040);
-
       this._renderer.render(this._scene, this._secondCamera);
     }
 
     this._lightHelper.update();
     this._cameraHelper.update();
   }
-
-  // start() {
-  //   this._loop.start();
-  // }
-
-  // stop() {
-  //   this._loop.stop();
-  // }
 }

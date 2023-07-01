@@ -1,14 +1,13 @@
 import { html, TemplateResult } from 'lit';
-import '../src/three-world.js';
+import '../src/helpers/demo-helper.js';
+import { Tree } from '../src/index.js';
 
 export default {
   title: 'ThreeWorld',
   component: 'three-world',
-  // argTypes: {
-  //   header: { control: 'text' },
-  //   counter: { control: 'number' },
-  //   textColor: { control: 'color' },
-  // },
+  argTypes: {
+    tree: { control: 'object' },
+  },
 };
 
 interface Story<T> {
@@ -18,26 +17,8 @@ interface Story<T> {
 }
 
 interface ArgTypes {
-  header?: string;
-  counter?: number;
-  textColor?: string;
-  slot?: TemplateResult;
+  tree: Tree[];
 }
-
-// const Template: Story<ArgTypes> = ({
-//   header = 'Hello world',
-//   counter = 5,
-//   textColor,
-//   slot,
-// }: ArgTypes) => html`
-//   <three-world
-//     style="--three-world-text-color: ${textColor || 'black'}"
-//     .header=${header}
-//     .counter=${counter}
-//   >
-//     ${slot}
-//   </three-world>
-// `;
 
 const Template: Story<ArgTypes> = () => html`
   <style>
@@ -49,25 +30,7 @@ const Template: Story<ArgTypes> = () => html`
       height: 100%;
     }
   </style>
-  <three-world></three-world>
+  <demo-helper></demo-helper>
 `;
 
 export const Regular = Template.bind({});
-
-// export const CustomHeader = Template.bind({});
-// CustomHeader.args = {
-//   header: 'My header',
-// };
-
-// export const CustomCounter = Template.bind({});
-// CustomCounter.args = {
-//   counter: 123456,
-// };
-
-// export const SlottedContent = Template.bind({});
-// SlottedContent.args = {
-//   slot: html`<p>Slotted content</p>`,
-// };
-// SlottedContent.argTypes = {
-//   slot: { table: { disable: true } },
-// };

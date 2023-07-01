@@ -1,34 +1,44 @@
+/** 单例模式 */
+
 import { EventDispatcher } from 'three';
 
-import * as THREE from 'three';
+class Resizer extends EventDispatcher {
+  private _canvas: HTMLCanvasElement;
 
-const _setSize = (renderer: THREE.WebGLRenderer) => {
-  const canvas = renderer.domElement;
-  const pixelRatio = 1; // window.devicePixelRatio;
-  const width = canvas.clientWidth * pixelRatio || 0;
-  const height = canvas.clientHeight * pixelRatio || 0;
-  const needResize = canvas.width !== width || canvas.height !== height;
-
-  if (needResize) {
-    renderer.setSize(width, height, false);
-  }
-
-  return needResize;
-};
-
-export class Resizer extends EventDispatcher {
-  constructor(renderer: THREE.WebGLRenderer) {
+  constructor(canvas: HTMLCanvasElement) {
     super();
 
-    // set initial size
-    _setSize(renderer);
+    this._canvas = canvas;
 
     // resize if the window is resized
     window.addEventListener('resize', () => {
-      const needResize = _setSize(renderer);
-      if (needResize) {
-        this.dispatchEvent({ type: 'window-resize' });
-      }
+      this._dispatch(true);
     });
   }
+
+  private _dispatch(needRender: boolean) {
+    const { width, height, clientWidth, clientHeight } = this._canvas;
+    const needResize = width !== clientWidth || height !== clientHeight;
+    if (needResize) {
+      this.dispatchEvent({
+        type: 'resizer-render',
+        clientWidth,
+        clientHeight,
+        needRender,
+      });
+    }
+  }
+
+  public init() {
+    this._dispatch(false);
+  }
 }
+
+let _resizer!: Resizer;
+
+export const getUniqueResizer = (canvas: HTMLCanvasElement) => {
+  if (!_resizer) {
+    _resizer = new Resizer(canvas);
+  }
+  return _resizer;
+};
