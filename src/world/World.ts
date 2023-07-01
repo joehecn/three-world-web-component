@@ -119,17 +119,15 @@ export class World {
     secondControls.addEventListener('change', this.render.bind(this));
 
     const resizer = getUniqueResizer(this._renderer.domElement);
-    resizer.addEventListener(
-      'resizer-render',
-      ({ clientWidth, clientHeight, needRender }) => {
-        this._renderer.setSize(
-          clientWidth as number,
-          clientHeight as number,
-          false
-        );
-        if (needRender as boolean) this.render();
-      }
-    );
+    resizer.addEventListener('resizer-render', ({ detail }) => {
+      const { clientWidth, clientHeight, needRender } = detail as {
+        clientWidth: number;
+        clientHeight: number;
+        needRender: boolean;
+      };
+      this._renderer.setSize(clientWidth, clientHeight, false);
+      if (needRender) this.render();
+    });
     resizer.init();
 
     this._lightHelper = new DirectionalLightHelper(mainLight);

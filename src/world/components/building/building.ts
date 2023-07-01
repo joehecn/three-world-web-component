@@ -6,7 +6,7 @@ export async function loadBuilding() {
   const loader = new GLTFLoader();
   // const data = await loader.loadAsync('/assets/tw/glb/building.glb');
   const data = await loader.loadAsync(
-    'https://cbosv3-sandbox.oss-cn-hongkong.aliyuncs.com/test-glb/building.glb'
+    'https://cbosv3-sandbox.oss-cn-hongkong.aliyuncs.com/test-glb/building.glb?v=1'
   );
 
   const building = setupModel(data);

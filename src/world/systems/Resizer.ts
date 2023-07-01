@@ -22,9 +22,11 @@ class Resizer extends EventDispatcher {
     if (needResize) {
       this.dispatchEvent({
         type: 'resizer-render',
-        clientWidth,
-        clientHeight,
-        needRender,
+        detail: {
+          clientWidth,
+          clientHeight,
+          needRender,
+        },
       });
     }
   }
