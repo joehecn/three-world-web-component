@@ -95,6 +95,9 @@ export class ThreeWorld extends LitElement {
   ];
 
   // * 重要 不要在内部改变外部传入的属性
+  @property({ type: String }) glb = '';
+
+  // * 重要 不要在内部改变外部传入的属性
   @property({ type: Array }) tree: Tree[] = [];
 
   @query('.three-world')
@@ -110,6 +113,8 @@ export class ThreeWorld extends LitElement {
   _controlView!: HTMLDivElement;
 
   firstUpdated(): void {
+    if (!this.glb) return;
+
     const world = new World(
       this._canvas,
       this._mainView,
@@ -118,7 +123,7 @@ export class ThreeWorld extends LitElement {
       this.tree
     );
 
-    world.init(); // .catch(console.error);
+    world.init(this.glb); // .catch(console.error);
 
     this._world = world;
   }

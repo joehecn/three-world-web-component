@@ -1,5 +1,5 @@
 import { html, LitElement } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { Tree } from '../world/type.js';
 
 import '../three-world.js';
@@ -140,7 +140,12 @@ export class DemoHelper extends LitElement {
     },
   ];
 
+  // * 重要 不要在内部改变外部传入的属性
+  @property({ type: String }) glb = '';
+
   render() {
-    return html` <three-world .tree=${this._tree}></three-world> `;
+    return html`
+      <three-world .glb=${this.glb} .tree=${this._tree}></three-world>
+    `;
   }
 }

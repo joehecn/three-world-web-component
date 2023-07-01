@@ -6,6 +6,7 @@ export default {
   title: 'ThreeWorld',
   component: 'three-world',
   argTypes: {
+    glb: { control: 'string' },
     tree: { control: 'object' },
   },
 };
@@ -17,6 +18,7 @@ interface Story<T> {
 }
 
 interface ArgTypes {
+  glb: string;
   tree: Tree[];
 }
 
@@ -30,7 +32,9 @@ const Template: Story<ArgTypes> = () => html`
       height: 100%;
     }
   </style>
-  <demo-helper></demo-helper>
+  <demo-helper
+    glb="https://cbosv3-sandbox.oss-cn-hongkong.aliyuncs.com/test-glb/building.glb?v=1"
+  ></demo-helper>
 `;
 
 export const Regular = Template.bind({});

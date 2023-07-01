@@ -27,9 +27,11 @@
     import { html, render } from 'lit';
     import '../dist/src/helpers/demo-helper.js';
 
+    const glb = '/assets/tw/glb/building.glb'
+
     render(
       html`
-        <demo-helper></demo-helper>
+        <demo-helper .glb=${glb}></demo-helper>
       `,
       document.querySelector('#demo')
     );

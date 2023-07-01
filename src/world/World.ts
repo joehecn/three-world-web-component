@@ -144,8 +144,8 @@ export class World {
     );
   }
 
-  public async init() {
-    const building = await loadBuilding();
+  public async init(glb: string) {
+    const building = await loadBuilding(glb);
     this._scene.add(building);
 
     this.render();
