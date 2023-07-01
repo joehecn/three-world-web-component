@@ -119,7 +119,7 @@ export class World {
     secondControls.addEventListener('change', this.render.bind(this));
 
     const resizer = getUniqueResizer(this._renderer.domElement);
-    resizer.addEventListener('resizer-render', e => {
+    resizer.addEventListener('resizer-render', (e: any) => {
       const { clientWidth, clientHeight, needRender } = e.detail as {
         clientWidth: number;
         clientHeight: number;
