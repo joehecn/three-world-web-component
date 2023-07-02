@@ -11,6 +11,9 @@ import {
   DirectionalLightHelper,
   CameraHelper,
   AxesHelper,
+  PlaneHelper,
+  GridHelper,
+  PickHelper,
 } from './helpers/index.js';
 
 import {
@@ -50,8 +53,29 @@ function __setScissorForElement(
   };
 }
 
+function __getCanvasRelativePosition(
+  e: MouseEvent,
+  canvas: HTMLCanvasElement,
+  elem: HTMLDivElement
+) {
+  const { left, positiveYUpBottom, width, height } = __setScissorForElement(
+    canvas,
+    elem
+  );
+
+  const x = e.clientX - left;
+  const y = e.clientY - positiveYUpBottom;
+
+  if (x < 0 || y < 0 || x > width || y > height) return null;
+  return { x, y, width, height };
+}
+
 export class World {
   private _scene: THREE.Scene;
+
+  private _building!: THREE.Group;
+
+  private _tree: Tree[];
 
   private _mainCamera: THREE.PerspectiveCamera;
 
@@ -69,7 +93,11 @@ export class World {
 
   private _axesHelper: THREE.AxesHelper;
 
-  private _tree: Tree[];
+  private _planeHelper: THREE.PlaneHelper;
+
+  private _gridHelper: THREE.GridHelper;
+
+  private _pickHelper: PickHelper | null = null;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -135,28 +163,110 @@ export class World {
     this._axesHelper = new AxesHelper(500);
     this._axesHelper.visible = false;
 
+    this._planeHelper = new PlaneHelper(new THREE.Plane(), 1);
+    this._planeHelper.visible = false;
+
+    this._gridHelper = new GridHelper(10, 10);
+    this._gridHelper.matrix.makeRotationX(Math.PI / 2);
+    this._gridHelper.matrixAutoUpdate = false;
+    this._planeHelper.add(this._gridHelper);
+
     this._scene.add(
       mainLight,
       secondLight,
       this._lightHelper,
       this._cameraHelper,
-      this._axesHelper
+      this._axesHelper,
+      this._planeHelper
     );
   }
 
+  private __setPick = (e: MouseEvent) => {
+    const canvas = this._renderer.domElement;
+    const pos = __getCanvasRelativePosition(e, canvas, this._mainView);
+
+    if (pos) {
+      // 归一化 x, y 坐标
+      const x = (pos.x / pos.width) * 2 - 1;
+      const y = (pos.y / pos.height) * -2 + 1;
+
+      const Vector2 = new THREE.Vector2(x, y);
+      const curent = this._pickHelper!.pick(
+        Vector2,
+        this._building.children,
+        this._mainCamera
+      );
+      if (!curent) {
+        this._planeHelper.visible = false;
+      } else {
+        const { face, object, point } = curent;
+        const plane = new THREE.Plane();
+
+        const vA = new THREE.Vector3();
+        const vB = new THREE.Vector3();
+        const vC = new THREE.Vector3();
+        const { geometry } = object as THREE.Mesh;
+        const { position } = geometry.attributes;
+
+        vA.fromBufferAttribute(position, face!.a);
+        vB.fromBufferAttribute(position, face!.b);
+        vC.fromBufferAttribute(position, face!.c);
+
+        const { matrixWorld } = object;
+        vA.applyMatrix4(matrixWorld);
+        vB.applyMatrix4(matrixWorld);
+        vC.applyMatrix4(matrixWorld);
+
+        plane.setFromCoplanarPoints(vA, vB, vC);
+
+        this._planeHelper.plane = plane;
+
+        const local = this._planeHelper.worldToLocal(point.clone());
+        this._gridHelper.matrix.setPosition(local);
+        this._planeHelper.visible = true;
+      }
+
+      this.render();
+    }
+  };
+
   public async init(glb: string) {
     const building = await loadBuilding(glb);
+    // console.log(building); // Group
+    this._building = building;
     this._scene.add(building);
 
     this.render();
   }
 
   public toolAction(toolData: ToolData) {
-    // console.log(toolData);
     const { group, actived } = toolData;
 
     if (group === 'setting') {
       this._axesHelper.visible = !!actived;
+      this.render();
+      return;
+    }
+
+    if (group === 'operate') {
+      if (actived === 'add') {
+        // add listener
+        this._pickHelper = new PickHelper();
+        this._planeHelper.visible = true;
+        window.addEventListener('mousemove', this.__setPick);
+        this.render();
+        return;
+      }
+
+      // remove listener
+      this._pickHelper = null;
+      this._planeHelper.visible = false;
+      window.removeEventListener('mousemove', this.__setPick);
+
+      if (actived === 'move') {
+        // TODO: move
+      }
+
       this.render();
     }
   }
