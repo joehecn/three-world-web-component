@@ -2,7 +2,7 @@ import { EventDispatcher } from 'three';
 import GUI from 'lil-gui';
 import { Tree } from '../type.js';
 
-export class DevicesGUI extends EventDispatcher {
+export class AssetsGUI extends EventDispatcher {
   private _gui: GUI;
 
   private _obj = {
@@ -17,7 +17,7 @@ export class DevicesGUI extends EventDispatcher {
     const gui = new GUI({
       container: controlView,
       width: 400,
-      title: 'Device list',
+      title: 'Assets list',
       injectStyles: false,
     });
     this._gui = gui;

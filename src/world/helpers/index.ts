@@ -4,6 +4,7 @@ export {
   AxesHelper,
   PlaneHelper,
   GridHelper,
+  BoxHelper,
 } from 'three';
 
 export { ColorGUIHelper } from './ColorGUIHelper.js';

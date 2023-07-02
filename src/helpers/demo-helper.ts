@@ -1,11 +1,17 @@
 import { html, LitElement } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+
+import { Group } from 'three';
+import * as THREE from 'three';
 import { Tree } from '../world/type.js';
 
 import '../three-world.js';
 
 @customElement('demo-helper')
 export class DemoHelper extends LitElement {
+  @state()
+  _assets: THREE.Group = new Group();
+
   @state()
   _tree: Tree[] = [
     {

@@ -13,6 +13,7 @@ import {
   AxesHelper,
   PlaneHelper,
   GridHelper,
+  BoxHelper,
   PickHelper,
 } from './helpers/index.js';
 
@@ -75,6 +76,8 @@ export class World {
 
   private _building!: THREE.Group;
 
+  private _assets: THREE.Group;
+
   private _tree: Tree[];
 
   private _mainCamera: THREE.PerspectiveCamera;
@@ -97,17 +100,21 @@ export class World {
 
   private _gridHelper: THREE.GridHelper;
 
-  private _pickHelper: PickHelper | null = null;
+  private _boxHelper: THREE.BoxHelper | null = null;
+
+  private _pickHelper: PickHelper = new PickHelper();
 
   constructor(
     canvas: HTMLCanvasElement,
     mainView: HTMLDivElement,
     secondView: HTMLDivElement,
     controlView: HTMLDivElement,
+    assets: THREE.Group,
     tree: Tree[]
   ) {
     this._mainView = mainView;
     this._secondView = secondView;
+    this._assets = assets;
     this._tree = tree;
 
     this._renderer = createRenderer(canvas);
@@ -177,7 +184,8 @@ export class World {
       this._lightHelper,
       this._cameraHelper,
       this._axesHelper,
-      this._planeHelper
+      this._planeHelper,
+      this._assets
     );
   }
 
@@ -185,49 +193,114 @@ export class World {
     const canvas = this._renderer.domElement;
     const pos = __getCanvasRelativePosition(e, canvas, this._mainView);
 
-    if (pos) {
-      // 归一化 x, y 坐标
-      const x = (pos.x / pos.width) * 2 - 1;
-      const y = (pos.y / pos.height) * -2 + 1;
+    if (!pos) return;
 
-      const Vector2 = new THREE.Vector2(x, y);
-      const curent = this._pickHelper!.pick(
-        Vector2,
-        this._building.children,
-        this._mainCamera
-      );
-      if (!curent) {
-        this._planeHelper.visible = false;
-      } else {
-        const { face, object, point } = curent;
-        const plane = new THREE.Plane();
+    // 归一化 x, y 坐标
+    const x = (pos.x / pos.width) * 2 - 1;
+    const y = (pos.y / pos.height) * -2 + 1;
 
-        const vA = new THREE.Vector3();
-        const vB = new THREE.Vector3();
-        const vC = new THREE.Vector3();
-        const { geometry } = object as THREE.Mesh;
-        const { position } = geometry.attributes;
+    const Vector2 = new THREE.Vector2(x, y);
+    const curent = this._pickHelper.pick(
+      Vector2,
+      this._building.children,
+      this._mainCamera
+    );
 
-        vA.fromBufferAttribute(position, face!.a);
-        vB.fromBufferAttribute(position, face!.b);
-        vC.fromBufferAttribute(position, face!.c);
+    if (!curent) {
+      this._planeHelper.visible = false;
+    } else {
+      const { face, object, point } = curent;
+      const plane = new THREE.Plane();
 
-        const { matrixWorld } = object;
-        vA.applyMatrix4(matrixWorld);
-        vB.applyMatrix4(matrixWorld);
-        vC.applyMatrix4(matrixWorld);
+      const vA = new THREE.Vector3();
+      const vB = new THREE.Vector3();
+      const vC = new THREE.Vector3();
+      const { geometry } = object as THREE.Mesh;
+      const { position } = geometry.attributes;
 
-        plane.setFromCoplanarPoints(vA, vB, vC);
+      vA.fromBufferAttribute(position, face!.a);
+      vB.fromBufferAttribute(position, face!.b);
+      vC.fromBufferAttribute(position, face!.c);
 
-        this._planeHelper.plane = plane;
+      const { matrixWorld } = object;
+      vA.applyMatrix4(matrixWorld);
+      vB.applyMatrix4(matrixWorld);
+      vC.applyMatrix4(matrixWorld);
 
-        const local = this._planeHelper.worldToLocal(point.clone());
-        this._gridHelper.matrix.setPosition(local);
-        this._planeHelper.visible = true;
-      }
+      plane.setFromCoplanarPoints(vA, vB, vC);
 
-      this.render();
+      this._planeHelper.plane = plane;
+
+      const local = this._planeHelper.worldToLocal(point.clone());
+      this._gridHelper.matrix.setPosition(local);
+      this._planeHelper.visible = true;
     }
+
+    this.render();
+  };
+
+  private __addObject = (e: MouseEvent) => {
+    const canvas = this._renderer.domElement;
+    const pos = __getCanvasRelativePosition(e, canvas, this._mainView);
+
+    if (!pos) return;
+
+    // 归一化 x, y 坐标
+    const x = (pos.x / pos.width) * 2 - 1;
+    const y = (pos.y / pos.height) * -2 + 1;
+
+    const Vector2 = new THREE.Vector2(x, y);
+    const curent = this._pickHelper.pick(
+      Vector2,
+      this._building.children,
+      this._mainCamera
+    );
+    if (!curent) return;
+
+    const { point } = curent;
+
+    // add object
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshPhongMaterial({
+      color: 0x00ffff,
+    });
+    const cube = new THREE.Mesh(geometry, material);
+    const local = this._assets.worldToLocal(point.clone());
+    cube.position.copy(local);
+
+    this._assets.add(cube);
+
+    this.render();
+  };
+
+  private __selectAsset = (e: MouseEvent) => {
+    const canvas = this._renderer.domElement;
+    const pos = __getCanvasRelativePosition(e, canvas, this._mainView);
+
+    if (!pos) return;
+
+    // 归一化 x, y 坐标
+    const x = (pos.x / pos.width) * 2 - 1;
+    const y = (pos.y / pos.height) * -2 + 1;
+
+    const Vector2 = new THREE.Vector2(x, y);
+    const curent = this._pickHelper.pick(
+      Vector2,
+      this._assets.children,
+      this._mainCamera
+    );
+    if (!curent) return;
+
+    const { object } = curent;
+
+    if (!this._boxHelper) {
+      this._boxHelper = new BoxHelper(object, 0xffff00);
+      this._scene.add(this._boxHelper);
+    } else {
+      this._boxHelper.setFromObject(object);
+    }
+
+    this.render();
   };
 
   public async init(glb: string) {
@@ -248,25 +321,28 @@ export class World {
       return;
     }
 
-    if (group === 'operate') {
-      if (actived === 'add') {
-        // add listener
-        this._pickHelper = new PickHelper();
-        this._planeHelper.visible = true;
-        window.addEventListener('mousemove', this.__setPick);
-        this.render();
-        return;
-      }
+    if (group !== 'operate') return;
 
+    if (actived === 'add') {
       // remove listener
-      this._pickHelper = null;
-      this._planeHelper.visible = false;
+      window.removeEventListener('click', this.__selectAsset);
+      // add listener
+      window.addEventListener('mousemove', this.__setPick);
+      window.addEventListener('dblclick', this.__addObject);
+
+      this._planeHelper.visible = true;
+      this.render();
+      return;
+    }
+
+    if (actived === 'move') {
+      // remove listener
       window.removeEventListener('mousemove', this.__setPick);
+      window.removeEventListener('dblclick', this.__addObject);
+      // add listener
+      window.addEventListener('click', this.__selectAsset);
 
-      if (actived === 'move') {
-        // TODO: move
-      }
-
+      this._planeHelper.visible = false;
       this.render();
     }
   }

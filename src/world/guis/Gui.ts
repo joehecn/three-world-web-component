@@ -1,14 +1,14 @@
 import * as THREE from 'three';
 import { EventDispatcher } from 'three';
-import { DevicesGUI } from './DevicesGUI.js';
-import { DeviceGUI } from './DeviceGUI.js';
+import { AssetsGUI } from './AssetsGUI.js';
+import { AssetGUI } from './AssetGUI.js';
 import { ConfigGUI } from './ConfigGUI.js';
 import { Tree } from '../type.js';
 
 export class Gui extends EventDispatcher {
   private _guiMap: Map<string, any> = new Map();
 
-  private _currentGuiKey: string = 'devices';
+  private _currentGuiKey: string = 'assets';
 
   constructor(
     controlView: HTMLDivElement,
@@ -19,13 +19,13 @@ export class Gui extends EventDispatcher {
   ) {
     super();
 
-    const devicesGUI = new DevicesGUI(controlView, tree);
-    devicesGUI.show();
-    this._guiMap.set('devices', devicesGUI);
+    const assetsGUI = new AssetsGUI(controlView, tree);
+    assetsGUI.show();
+    this._guiMap.set('assets', assetsGUI);
 
-    const deviceGUI = new DeviceGUI(controlView);
-    deviceGUI.hide();
-    this._guiMap.set('device', deviceGUI);
+    const assetGUI = new AssetGUI(controlView);
+    assetGUI.hide();
+    this._guiMap.set('asset', assetGUI);
 
     const configGUI = new ConfigGUI(
       controlView,
@@ -36,12 +36,12 @@ export class Gui extends EventDispatcher {
     configGUI.hide();
     this._guiMap.set('config', configGUI);
 
-    devicesGUI.addEventListener('goto-config-gui', () => {
+    assetsGUI.addEventListener('goto-config-gui', () => {
       this.setCurrentGuiKey('config');
     });
 
-    configGUI.addEventListener('goto-devices-gui', () => {
-      this.setCurrentGuiKey('devices');
+    configGUI.addEventListener('goto-assets-gui', () => {
+      this.setCurrentGuiKey('assets');
     });
     configGUI.addEventListener('config-gui-change', this._dispatch.bind(this));
   }

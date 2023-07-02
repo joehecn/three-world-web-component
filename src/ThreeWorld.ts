@@ -2,13 +2,16 @@ import { html, css, LitElement } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import { query } from 'lit/decorators/query.js';
 
-import { World } from './world/index.js';
+import { Group } from 'three';
+import * as THREE from 'three';
 
-import './tool/index.js';
+import { World } from './world/index.js';
 
 import type { ToolData, Tree } from './world/type.js';
 
 import { lilStyles } from './css/lil-gui.js';
+
+import './tool/index.js';
 
 export class ThreeWorld extends LitElement {
   static styles = [
@@ -97,6 +100,8 @@ export class ThreeWorld extends LitElement {
   // * 重要 不要在内部改变外部传入的属性
   @property({ type: String }) glb = '';
 
+  @property({ type: Object }) assets: THREE.Group = new Group();
+
   // * 重要 不要在内部改变外部传入的属性
   @property({ type: Array }) tree: Tree[] = [];
 
@@ -120,12 +125,26 @@ export class ThreeWorld extends LitElement {
       this._mainView,
       this._secondView,
       this._controlView,
+      this.assets,
       this.tree
     );
 
     world.init(this.glb); // .catch(console.error);
 
     this._world = world;
+
+    this._world.toolAction({
+      group: 'operate',
+      actived: 'move',
+      btns: [
+        {
+          action: 'move',
+        },
+        {
+          action: 'add',
+        },
+      ],
+    });
   }
 
   private _setToolData(group: string, action: string, actived: string) {

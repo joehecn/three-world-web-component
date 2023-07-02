@@ -1,7 +1,7 @@
 import { EventDispatcher } from 'three';
 import GUI from 'lil-gui';
 
-export class DeviceGUI extends EventDispatcher {
+export class AssetGUI extends EventDispatcher {
   private _gui: GUI;
 
   constructor(controlView: HTMLDivElement) {
@@ -10,7 +10,7 @@ export class DeviceGUI extends EventDispatcher {
     const gui = new GUI({
       container: controlView,
       width: 400,
-      title: 'Device',
+      title: 'Asset',
       injectStyles: false,
     });
     this._gui = gui;

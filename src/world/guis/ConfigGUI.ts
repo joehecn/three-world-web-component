@@ -8,8 +8,8 @@ export class ConfigGUI extends EventDispatcher {
   private _gui: GUI;
 
   private _obj = {
-    gotoDevicesGUI: () => {
-      this.dispatchEvent({ type: 'goto-devices-gui' });
+    gotoAssetsGUI: () => {
+      this.dispatchEvent({ type: 'goto-assets-gui' });
     },
   };
 
@@ -29,7 +29,7 @@ export class ConfigGUI extends EventDispatcher {
     });
     this._gui = gui;
 
-    gui.add(this._obj, 'gotoDevicesGUI').name('Device list >>>');
+    gui.add(this._obj, 'gotoAssetsGUI').name('Assets list >>>');
 
     const lightsFolder = gui.addFolder('Lights');
     const mainLightFolder = lightsFolder.addFolder('Main Light');
