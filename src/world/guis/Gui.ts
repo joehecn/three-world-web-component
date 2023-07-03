@@ -40,6 +40,11 @@ export class Gui extends EventDispatcher {
       this.setCurrentGuiKey('config');
     });
 
+    assetGUI.addEventListener('goto-assets-gui', () => {
+      this.setCurrentGuiKey('assets');
+    });
+    assetGUI.addEventListener('asset-gui-change', this._dispatch.bind(this));
+
     configGUI.addEventListener('goto-assets-gui', () => {
       this.setCurrentGuiKey('assets');
     });
@@ -64,5 +69,9 @@ export class Gui extends EventDispatcher {
     // 设置新的 GUI 并 显示
     this._currentGuiKey = key;
     this._guiMap.get(key).show();
+  }
+
+  public initAssetGUI(object: THREE.Object3D) {
+    this._guiMap.get('asset').init(object as THREE.Mesh);
   }
 }

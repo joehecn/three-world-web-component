@@ -24,7 +24,7 @@ import {
 } from './systems/index.js';
 
 import type { ToolData, Tree } from './type.js';
-import { getUniqueGui } from './guis/index.js';
+import { getUniqueGui, Gui } from './guis/index.js';
 
 function __setScissorForElement(
   canvas: HTMLCanvasElement,
@@ -104,6 +104,8 @@ export class World {
 
   private _pickHelper: PickHelper = new PickHelper();
 
+  private _gui: Gui | null = null;
+
   constructor(
     canvas: HTMLCanvasElement,
     mainView: HTMLDivElement,
@@ -138,14 +140,14 @@ export class World {
       [-90, 300, 30] // position: [x, y, z]
     );
 
-    const gui = getUniqueGui(
+    this._gui = getUniqueGui(
       controlView,
       mainLight,
       secondLight,
       this._mainCamera,
       tree
     );
-    gui.addEventListener('gui-change', this.render.bind(this));
+    this._gui.addEventListener('gui-change', this.render.bind(this));
 
     const mainControls = createControls(this._mainCamera, mainView);
     mainControls.addEventListener('change', this.render.bind(this));
@@ -301,6 +303,9 @@ export class World {
     }
 
     this.render();
+
+    this._gui!.setCurrentGuiKey('asset');
+    this._gui!.initAssetGUI(object);
   };
 
   public async init(glb: string) {

@@ -16,3 +16,5 @@ export const getUniqueGui = (
   }
   return _gui;
 };
+
+export { Gui };
