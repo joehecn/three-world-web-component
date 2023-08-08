@@ -2,7 +2,7 @@ import { css, html, LitElement } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 
 import '../three-world.js';
-import type { Axes, Point, View } from '../world/index.js';
+import type { AxesConfig, IconConfig, Point, View } from '../world/index.js';
 import { ThreeWorld } from '../ThreeWorld.js';
 
 function _getItem() {
@@ -78,9 +78,14 @@ export class DemoHelper extends LitElement {
   _background = '#d9e1eb';
 
   @state()
-  _axes: Axes = {
+  _axes: AxesConfig = {
     size: 1,
     visible: false,
+  };
+
+  @state()
+  _icon: IconConfig = {
+    scale: 0.16,
   };
 
   @state()
@@ -100,12 +105,13 @@ export class DemoHelper extends LitElement {
   }
 
   private _setConfig(config: any) {
-    const { view, base, glb, background, axes, points } = config;
+    const { view, base, glb, background, axes, icon, points } = config;
     if (view) this._view = view;
     if (base) this._base = base;
     if (glb) this._glb = glb;
     if (background) this._background = background;
     if (axes) this._axes = axes;
+    if (icon) this._icon = icon;
     if (points) this._points = points;
   }
 
@@ -147,6 +153,7 @@ export class DemoHelper extends LitElement {
       glb: this._glb,
       background: this._background,
       axes: this._axes,
+      icon: this._icon,
       points: this._points,
     };
     const value = JSON.stringify(config);
@@ -226,6 +233,7 @@ export class DemoHelper extends LitElement {
         .glb=${this._glb}
         .background=${this._background}
         .axes=${this._axes}
+        .icon=${this._icon}
         .points=${this._points}
         @point-create=${this.handlePointCreate}
         @point-selected=${this.handlePointSelected}

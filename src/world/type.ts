@@ -6,9 +6,13 @@ export type ToolData = {
   }[];
 };
 
-export type Axes = {
+export type AxesConfig = {
   size: number;
   visible: boolean;
+};
+
+export type IconConfig = {
+  scale: number;
 };
 
 export type Point = {

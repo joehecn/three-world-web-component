@@ -3,7 +3,8 @@ import { property, state } from 'lit/decorators.js';
 import { query } from 'lit/decorators/query.js';
 
 import {
-  type Axes,
+  type AxesConfig,
+  type IconConfig,
   type ToolData,
   type Point,
   World,
@@ -119,9 +120,14 @@ export class ThreeWorld extends LitElement {
   @property({ type: String }) background = '#d9e1eb';
 
   // * 重要 不要在内部改变外部传入的属性
-  @property({ type: Object }) axes: Axes = {
+  @property({ type: Object }) axes: AxesConfig = {
     size: 1,
     visible: false,
+  };
+
+  // * 重要 不要在内部改变外部传入的属性
+  @property({ type: Object }) icon: IconConfig = {
+    scale: 0.16,
   };
 
   // * 重要 不要在内部改变外部传入的属性
@@ -220,6 +226,7 @@ export class ThreeWorld extends LitElement {
     this._world = new World(
       this.view,
       this.axes,
+      this.icon,
       this.points,
       this._canvas,
       this._mainView,
@@ -227,7 +234,7 @@ export class ThreeWorld extends LitElement {
       this._controlView
     );
 
-    this._world.init(this.base, this.glb, this.background);
+    this._world.init(this.base, this.icon.scale, this.glb, this.background);
 
     if (this.view === 'read') {
       this._toolData = [];
@@ -268,7 +275,7 @@ export class ThreeWorld extends LitElement {
   }
 
   public addPoint(point: Point) {
-    this._world.addPoint(this.base, point);
+    this._world.addPoint(this.base, point, this.icon.scale);
   }
 
   public removePoint(point: Point) {
@@ -322,7 +329,8 @@ export class ThreeWorld extends LitElement {
       changedProperties.has('base') ||
       changedProperties.has('glb') ||
       changedProperties.has('background') ||
-      changedProperties.has('axes')
+      changedProperties.has('axes') ||
+      changedProperties.has('icon')
     )
       this._init();
 

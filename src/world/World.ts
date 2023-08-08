@@ -25,7 +25,7 @@ import {
   getUniqueResizer,
 } from './systems/index.js';
 
-import type { ToolData, Axes, Point, View } from './type.js';
+import type { ToolData, AxesConfig, IconConfig, Point, View } from './type.js';
 import { getUniqueGui, Gui } from './guis/index.js';
 
 import { emitter } from './emitter.js';
@@ -152,7 +152,8 @@ export class World {
 
   constructor(
     view: View,
-    axes: Axes,
+    axes: AxesConfig,
+    icon: IconConfig,
     points: Point[],
     canvas: HTMLCanvasElement,
     mainView: HTMLDivElement,
@@ -233,7 +234,7 @@ export class World {
     this._arrowHelper = new ArrowHelper(
       new THREE.Vector3(),
       new THREE.Vector3(),
-      0.08
+      icon.scale
     );
     this._arrowHelper.visible = false;
 
@@ -434,9 +435,9 @@ export class World {
     this._gui?.initAssetGUI(object);
   };
 
-  private async __initAssets(base: string) {
+  private async __initAssets(base: string, scale: number) {
     const _fun = async (point: Point) => {
-      const sprite = await this.__genarateSprite(base, point, 0.08);
+      const sprite = await this.__genarateSprite(base, point, scale);
       this._assets.add(sprite);
     };
 
@@ -469,8 +470,8 @@ export class World {
     this._cameraHelper.update();
   }
 
-  public async addPoint(base: string, point: Point) {
-    const sprite = await this.__genarateSprite(base, point, 0.08);
+  public async addPoint(base: string, point: Point, scale: number) {
+    const sprite = await this.__genarateSprite(base, point, scale);
     this._assets.add(sprite);
     this.render();
   }
@@ -485,7 +486,12 @@ export class World {
     }
   }
 
-  public async init(base: string, glb: string, background: string) {
+  public async init(
+    base: string,
+    scale: number,
+    glb: string,
+    background: string
+  ) {
     this._scene.background = new THREE.Color(background);
 
     const building = await loadBuilding(`${base}${glb}`);
@@ -493,7 +499,7 @@ export class World {
     this._building = building;
     this._scene.add(building);
 
-    await this.__initAssets(base);
+    await this.__initAssets(base, scale);
 
     this.render();
   }
