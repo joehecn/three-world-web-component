@@ -30,18 +30,18 @@ import { getUniqueGui, Gui } from './guis/index.js';
 
 import { emitter } from './emitter.js';
 
-const _imageCache = new Map();
+// const _imageCache = new Map();
 
 function _loadSpritePromise(base: string, imageName: string) {
-  if (_imageCache.has(imageName)) {
-    return Promise.resolve(_imageCache.get(imageName));
-  }
+  // if (_imageCache.has(imageName)) {
+  //   return Promise.resolve(_imageCache.get(imageName));
+  // }
 
   return new Promise(resolve => {
     const loader = new THREE.TextureLoader();
     const path = `${base}${imageName}`;
     loader.load(path, texture => {
-      _imageCache.set(imageName, texture);
+      // _imageCache.set(imageName, texture);
       resolve(texture);
     });
   });
