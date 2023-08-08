@@ -110,6 +110,9 @@ export class ThreeWorld extends LitElement {
   @property({ type: String }) view: View = 'read';
 
   // * 重要 不要在内部改变外部传入的属性
+  @property({ type: String }) base = '';
+
+  // * 重要 不要在内部改变外部传入的属性
   @property({ type: String }) glb = '';
 
   // * 重要 不要在内部改变外部传入的属性
@@ -211,7 +214,7 @@ export class ThreeWorld extends LitElement {
   }
 
   private _init(): void {
-    if (!this.glb) return;
+    if (!this.base || !this.glb) return;
     if (this._world) this._world.dispose();
 
     this._world = new World(
@@ -224,7 +227,7 @@ export class ThreeWorld extends LitElement {
       this._controlView
     );
 
-    this._world.init(this.glb, this.background);
+    this._world.init(this.base, this.glb, this.background);
 
     if (this.view === 'read') {
       this._toolData = [];
@@ -265,7 +268,7 @@ export class ThreeWorld extends LitElement {
   }
 
   public addPoint(point: Point) {
-    this._world.addPoint(point);
+    this._world.addPoint(this.base, point);
   }
 
   public removePoint(point: Point) {
@@ -316,6 +319,7 @@ export class ThreeWorld extends LitElement {
     // console.log('willUpdate', changedProperties);
     if (
       changedProperties.has('view') ||
+      changedProperties.has('base') ||
       changedProperties.has('glb') ||
       changedProperties.has('background') ||
       changedProperties.has('axes')

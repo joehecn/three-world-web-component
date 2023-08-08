@@ -69,6 +69,9 @@ export class DemoHelper extends LitElement {
   _view: View = 'read';
 
   @state()
+  _base = '';
+
+  @state()
   _glb = '';
 
   @state()
@@ -97,8 +100,9 @@ export class DemoHelper extends LitElement {
   }
 
   private _setConfig(config: any) {
-    const { view, glb, background, axes, points } = config;
+    const { view, base, glb, background, axes, points } = config;
     if (view) this._view = view;
+    if (base) this._base = base;
     if (glb) this._glb = glb;
     if (background) this._background = background;
     if (axes) this._axes = axes;
@@ -139,6 +143,7 @@ export class DemoHelper extends LitElement {
   private _saveConfig(): void {
     const config = {
       view: this._view,
+      base: this._base,
       glb: this._glb,
       background: this._background,
       axes: this._axes,
@@ -217,6 +222,7 @@ export class DemoHelper extends LitElement {
     return html`
       <three-world
         .view=${this._view}
+        .base=${this._base}
         .glb=${this._glb}
         .background=${this._background}
         .axes=${this._axes}

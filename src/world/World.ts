@@ -32,14 +32,14 @@ import { emitter } from './emitter.js';
 
 const _imageCache = new Map();
 
-function _loadSpritePromise(imageName: string) {
+function _loadSpritePromise(base: string, imageName: string) {
   if (_imageCache.has(imageName)) {
     return Promise.resolve(_imageCache.get(imageName));
   }
 
   return new Promise(resolve => {
     const loader = new THREE.TextureLoader();
-    const path = `/assets/sprites/${imageName}`;
+    const path = `${base}${imageName}`;
     loader.load(path, texture => {
       _imageCache.set(imageName, texture);
       resolve(texture);
@@ -312,10 +312,14 @@ export class World {
     this.render();
   };
 
-  private __genarateSprite = async (point: Point, spriteScale: number) => {
+  private __genarateSprite = async (
+    base: string,
+    point: Point,
+    spriteScale: number
+  ) => {
     const { icon, _normal, _matrixWorld, _point, userData } = point;
 
-    const spriteMap = (await _loadSpritePromise(icon)) as THREE.Texture;
+    const spriteMap = (await _loadSpritePromise(base, icon)) as THREE.Texture;
     const spriteMaterial = new THREE.SpriteMaterial({ map: spriteMap });
     const sprite = new THREE.Sprite(spriteMaterial);
 
@@ -430,18 +434,14 @@ export class World {
     this._gui?.initAssetGUI(object);
   };
 
-  private async __initAssets() {
+  private async __initAssets(base: string) {
     const _fun = async (point: Point) => {
-      const sprite = await this.__genarateSprite(point, 0.08);
+      const sprite = await this.__genarateSprite(base, point, 0.08);
       this._assets.add(sprite);
     };
 
     const _promises = this._points.map(_fun);
-    // for (let i = 0, len = this._points.length; i < len; i += 1) {
-    //   const point = this._points[i];
-    //   const sprite = await this.__genarateSprite(point, 0.08)
-    //   this._assets.add(sprite);
-    // }
+
     await Promise.all(_promises);
   }
 
@@ -469,8 +469,8 @@ export class World {
     this._cameraHelper.update();
   }
 
-  public async addPoint(point: Point) {
-    const sprite = await this.__genarateSprite(point, 0.08);
+  public async addPoint(base: string, point: Point) {
+    const sprite = await this.__genarateSprite(base, point, 0.08);
     this._assets.add(sprite);
     this.render();
   }
@@ -485,15 +485,15 @@ export class World {
     }
   }
 
-  public async init(glb: string, background: string) {
+  public async init(base: string, glb: string, background: string) {
     this._scene.background = new THREE.Color(background);
 
-    const building = await loadBuilding(glb);
+    const building = await loadBuilding(`${base}${glb}`);
     // console.log(building); // Group
     this._building = building;
     this._scene.add(building);
 
-    await this.__initAssets();
+    await this.__initAssets(base);
 
     this.render();
   }

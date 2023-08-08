@@ -19,8 +19,9 @@ interface ArgTypes {
   glb: string;
 }
 
-// const glb = 'https://cbosv3-sandbox.oss-cn-hongkong.aliyuncs.com/test-glb/building.glb?v=1';
-// const glb = 'https://cbosv3-sandbox.oss-cn-hongkong.aliyuncs.com/test-glb/room.glb?v=1';
+// base: 'https://cbosv3-sandbox.oss-cn-hongkong.aliyuncs.com/test-glb/'
+// const glb = 'building.glb?v=1';
+// const glb = 'room.glb?v=1';
 
 const Template: Story<ArgTypes> = () => html`
   <style>
