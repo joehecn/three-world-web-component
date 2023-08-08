@@ -24,6 +24,11 @@ export class ThreeWorld extends LitElement {
         height: 100%;
         width: 100%;
         display: block;
+      }
+
+      .main-div {
+        height: 100%;
+        width: 100%;
         position: relative;
       }
 
@@ -340,16 +345,20 @@ export class ThreeWorld extends LitElement {
 
   protected render() {
     return html`
-      <j-tool
-        .data=${this._toolData}
-        @tool-btn-click="${this._toolBtnClick}"
-      ></j-tool>
-      <canvas class="three-world"></canvas>
-      <div class="split">
-        <div class="main-view"></div>
-        <div class=${this.view === 'config' ? 'tool-wrap' : 'tool-wrap hidden'}>
-          <div class="second-view"></div>
-          <div class="control-view"></div>
+      <div class="main-div">
+        <j-tool
+          .data=${this._toolData}
+          @tool-btn-click="${this._toolBtnClick}"
+        ></j-tool>
+        <canvas class="three-world"></canvas>
+        <div class="split">
+          <div class="main-view"></div>
+          <div
+            class=${this.view === 'config' ? 'tool-wrap' : 'tool-wrap hidden'}
+          >
+            <div class="second-view"></div>
+            <div class="control-view"></div>
+          </div>
         </div>
       </div>
     `;
