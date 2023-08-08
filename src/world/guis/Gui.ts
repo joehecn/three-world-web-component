@@ -1,31 +1,20 @@
 import * as THREE from 'three';
 import { EventDispatcher } from 'three';
-import { AssetsGUI } from './AssetsGUI.js';
 import { AssetGUI } from './AssetGUI.js';
 import { ConfigGUI } from './ConfigGUI.js';
-import { Tree } from '../type.js';
 
 export class Gui extends EventDispatcher {
   private _guiMap: Map<string, any> = new Map();
 
-  private _currentGuiKey: string = 'assets';
+  private _currentGuiKey: string = 'config';
 
   constructor(
     controlView: HTMLDivElement,
     mainLight: THREE.DirectionalLight,
     secondLight: THREE.HemisphereLight,
-    mainCamera: THREE.PerspectiveCamera,
-    tree: Tree[]
+    mainCamera: THREE.PerspectiveCamera
   ) {
     super();
-
-    const assetsGUI = new AssetsGUI(controlView, tree);
-    assetsGUI.show();
-    this._guiMap.set('assets', assetsGUI);
-
-    const assetGUI = new AssetGUI(controlView);
-    assetGUI.hide();
-    this._guiMap.set('asset', assetGUI);
 
     const configGUI = new ConfigGUI(
       controlView,
@@ -33,21 +22,18 @@ export class Gui extends EventDispatcher {
       secondLight,
       mainCamera
     );
-    configGUI.hide();
+    configGUI.show();
     this._guiMap.set('config', configGUI);
 
-    assetsGUI.addEventListener('goto-config-gui', () => {
-      this.setCurrentGuiKey('config');
-    });
+    const assetGUI = new AssetGUI(controlView);
+    assetGUI.hide();
+    this._guiMap.set('asset', assetGUI);
 
-    assetGUI.addEventListener('goto-assets-gui', () => {
-      this.setCurrentGuiKey('assets');
+    assetGUI.addEventListener('goto-config-gui', () => {
+      this.setCurrentGuiKey('config');
     });
     assetGUI.addEventListener('asset-gui-change', this._dispatch.bind(this));
 
-    configGUI.addEventListener('goto-assets-gui', () => {
-      this.setCurrentGuiKey('assets');
-    });
     configGUI.addEventListener('config-gui-change', this._dispatch.bind(this));
   }
 

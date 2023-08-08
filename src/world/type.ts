@@ -6,9 +6,17 @@ export type ToolData = {
   }[];
 };
 
-export type Tree = {
-  id: string;
-  name: string;
-  children?: Tree[];
-  isLeaf?: boolean;
+export type Axes = {
+  size: number;
+  visible: boolean;
 };
+
+export type Point = {
+  icon: string;
+  _normal: number[];
+  _matrixWorld: number[];
+  _point: number[];
+  userData?: { [key: string]: any };
+};
+
+export type View = 'read' | 'edit' | 'config';

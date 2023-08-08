@@ -1,1 +1,1 @@
-export { ThreeWorld, Tree } from './ThreeWorld.js';
+export { ThreeWorld } from './ThreeWorld.js';

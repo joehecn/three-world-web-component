@@ -4,6 +4,7 @@ export {
   AxesHelper,
   PlaneHelper,
   GridHelper,
+  ArrowHelper,
   BoxHelper,
 } from 'three';
 

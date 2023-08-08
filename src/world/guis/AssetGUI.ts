@@ -8,8 +8,8 @@ export class AssetGUI extends EventDispatcher {
   private _positionFolder: GUI | null = null;
 
   private _obj = {
-    gotoAssetsGUI: () => {
-      this.dispatchEvent({ type: 'goto-assets-gui' });
+    gotoConfigGUI: () => {
+      this.dispatchEvent({ type: 'goto-config-gui' });
     },
   };
 
@@ -18,13 +18,13 @@ export class AssetGUI extends EventDispatcher {
 
     const gui = new GUI({
       container: controlView,
-      width: 400,
+      width: 360,
       title: 'Asset',
       injectStyles: false,
     });
     this._gui = gui;
 
-    gui.add(this._obj, 'gotoAssetsGUI').name('Assets list >>>');
+    gui.add(this._obj, 'gotoConfigGUI').name('Config setting >>>');
   }
 
   private _dispatch() {

@@ -3,6 +3,8 @@
 ```bash
 npx gltf-pipeline -i assets/tw/glb/u1.gltf -o assets/tw/glb/u1Draco.gltf -d
 npx gltf-pipeline -i assets/tw/glb/u1Draco.gltf -o assets/tw/glb/u1Draco.glb
+
+/Users/hemiao/Downloads/IfcConvert /Users/hemiao/Downloads/ifc/glb/Switchboard_Model_IVE_Room_225.ifc /Users/hemiao/Downloads/ifc/glb/Switchboard_Model_IVE_Room_225.glb
 ```
 
 ## Demo
@@ -17,6 +19,13 @@ npm i three-world
 ```
 
 ## Usage
+
+### 参数
+``` js
+/**
+ * @param {string} glb required 模型地址
+ */
+```
 
 ```html
 <script type="module">

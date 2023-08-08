@@ -7,12 +7,6 @@ import { ColorGUIHelper, MinMaxGUIHelper } from '../helpers/index.js';
 export class ConfigGUI extends EventDispatcher {
   private _gui: GUI;
 
-  private _obj = {
-    gotoAssetsGUI: () => {
-      this.dispatchEvent({ type: 'goto-assets-gui' });
-    },
-  };
-
   constructor(
     controlView: HTMLDivElement,
     mainLight: THREE.DirectionalLight,
@@ -23,13 +17,11 @@ export class ConfigGUI extends EventDispatcher {
 
     const gui = new GUI({
       container: controlView,
-      width: 400,
+      width: 360,
       title: 'Config',
       injectStyles: false,
     });
     this._gui = gui;
-
-    gui.add(this._obj, 'gotoAssetsGUI').name('Assets list >>>');
 
     const lightsFolder = gui.addFolder('Lights');
     const mainLightFolder = lightsFolder.addFolder('Main Light');
@@ -45,13 +37,13 @@ export class ConfigGUI extends EventDispatcher {
     // Position
     const mainLightPositionFolder = mainLightFolder.addFolder('Position');
     mainLightPositionFolder
-      .add(mainLight.position, 'x', -400, 400, 1)
+      .add(mainLight.position, 'x', -300, 300, 1)
       .onChange(this._dispatch.bind(this));
     mainLightPositionFolder
-      .add(mainLight.position, 'y', -400, 400, 1)
+      .add(mainLight.position, 'y', -300, 300, 1)
       .onChange(this._dispatch.bind(this));
     mainLightPositionFolder
-      .add(mainLight.position, 'z', -400, 400, 1)
+      .add(mainLight.position, 'z', -300, 300, 1)
       .onChange(this._dispatch.bind(this));
 
     const secondLightFolder = lightsFolder.addFolder('Second Light');

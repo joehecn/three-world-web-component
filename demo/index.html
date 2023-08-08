@@ -5,16 +5,9 @@
   <meta charset="utf-8">
   <style>
     html,
-    body {
-      margin: 0;
-      height: 100%;
-    }
-
-    body {
-      background: #fafafa;
-    }
-
+    body,
     #demo {
+      margin: 0;
       height: 100%;
     }
   </style>
@@ -27,11 +20,12 @@
     import { html, render } from 'lit';
     import '../dist/src/helpers/demo-helper.js';
 
-    const glb = '/assets/tw/glb/building.glb'
+    // const glb = '/assets/tw/glb/building.glb'
+    // const glb = '/assets/tw/glb/room.glb'
 
     render(
       html`
-        <demo-helper .glb=${glb}></demo-helper>
+        <demo-helper></demo-helper>
       `,
       document.querySelector('#demo')
     );

@@ -2,8 +2,8 @@ import { PerspectiveCamera } from 'three';
 
 export function createCamera(
   option: [number, number, number, number] = [75, 2, 1, 600],
-  position: [number, number, number] = [0, 160, 20],
-  up: [number, number, number] = [0, 0, 1],
+  position: [number, number, number] = [10, 10, 10],
+  up: [number, number, number] = [0, 1, 0],
   lookAt: [number, number, number] = [0, 0, 0]
 ) {
   // fov, // Field Of View (default 50)

@@ -2,12 +2,14 @@ import { html, css, LitElement } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import { query } from 'lit/decorators/query.js';
 
-import { Group } from 'three';
-import * as THREE from 'three';
-
-import { World } from './world/index.js';
-
-import type { ToolData, Tree } from './world/type.js';
+import {
+  type Axes,
+  type ToolData,
+  type Point,
+  World,
+  emitter,
+  View,
+} from './world/index.js';
 
 import { lilStyles } from './css/lil-gui.js';
 
@@ -21,8 +23,6 @@ export class ThreeWorld extends LitElement {
         height: 100%;
         width: 100%;
         display: block;
-        /* padding: 25px; */
-        /* color: var(--three-world-text-color, #000); */
       }
 
       .three-world {
@@ -41,23 +41,24 @@ export class ThreeWorld extends LitElement {
       }
 
       .split > div {
-        /* width: 100%; */
         height: 100%;
       }
 
       .main-view {
         flex: auto;
-        /* border: 2px solid #000; */
       }
 
       .tool-wrap {
-        width: 400px;
+        width: 360px;
         display: flex;
         flex-direction: column;
       }
+      .tool-wrap.hidden {
+        display: none;
+      }
 
       .second-view {
-        border-top: 32px solid #000;
+        border-top: 2px solid #000;
         border-left: 2px solid #000;
         flex: none;
       }
@@ -67,43 +68,61 @@ export class ThreeWorld extends LitElement {
         flex: auto;
         overflow-y: auto;
       }
+
+      @media (max-width: 1200px) {
+        .second-view {
+          display: none;
+        }
+      }
     `,
   ];
 
   private _world!: World;
 
+  private _toolOperateActived: 'move' | 'add' = 'move';
+
   @state()
   _toolData: ToolData[] = [
-    {
-      group: 'operate',
-      actived: 'move',
-      btns: [
-        {
-          action: 'move',
-        },
-        {
-          action: 'add',
-        },
-      ],
-    },
-    {
-      group: 'setting',
-      actived: '',
-      btns: [
-        {
-          action: 'axes',
-        },
-      ],
-    },
+    // {
+    //   group: 'operate',
+    //   actived: 'move',
+    //   btns: [
+    //     {
+    //       action: 'move',
+    //     },
+    //     {
+    //       action: 'add',
+    //     },
+    //   ],
+    // },
+    // {
+    //   group: 'setting',
+    //   actived: 'axes',
+    //   btns: [
+    //     {
+    //       action: 'axes',
+    //     },
+    //   ],
+    // },
   ];
+
+  // * 重要 不要在内部改变外部传入的属性
+  @property({ type: String }) view: View = 'read';
 
   // * 重要 不要在内部改变外部传入的属性
   @property({ type: String }) glb = '';
 
-  @property({ type: Object }) assets: THREE.Group = new Group();
+  // * 重要 不要在内部改变外部传入的属性
+  @property({ type: String }) background = '#d9e1eb';
 
   // * 重要 不要在内部改变外部传入的属性
-  @property({ type: Array }) tree: Tree[] = [];
+  @property({ type: Object }) axes: Axes = {
+    size: 1,
+    visible: false,
+  };
+
+  // * 重要 不要在内部改变外部传入的属性
+  @property({ type: Array }) points: Point[] = [];
 
   @query('.three-world')
   _canvas!: HTMLCanvasElement;
@@ -116,36 +135,6 @@ export class ThreeWorld extends LitElement {
 
   @query('.control-view')
   _controlView!: HTMLDivElement;
-
-  firstUpdated(): void {
-    if (!this.glb) return;
-
-    const world = new World(
-      this._canvas,
-      this._mainView,
-      this._secondView,
-      this._controlView,
-      this.assets,
-      this.tree
-    );
-
-    world.init(this.glb); // .catch(console.error);
-
-    this._world = world;
-
-    this._world.toolAction({
-      group: 'operate',
-      actived: 'move',
-      btns: [
-        {
-          action: 'move',
-        },
-        {
-          action: 'add',
-        },
-      ],
-    });
-  }
 
   private _setToolData(group: string, action: string, actived: string) {
     const data = JSON.parse(JSON.stringify(this._toolData));
@@ -172,8 +161,168 @@ export class ThreeWorld extends LitElement {
     const { group, action, actived } = e.detail;
     const { changed, item } = this._setToolData(group, action, actived);
     if (changed) {
+      const { group: g, actived: a } = item;
+      if (g === 'setting') {
+        const detail = { actived: a };
+        const event = new CustomEvent('axes-setting-changed', {
+          detail,
+          bubbles: true,
+          composed: true,
+          cancelable: true,
+        });
+        this.dispatchEvent(event);
+        return;
+      }
+
+      if (g === 'operate') {
+        this._toolOperateActived = a;
+        this._setEditAction();
+      }
+
       this._world.toolAction(item);
     }
+  }
+
+  private _setEditAction(): void {
+    this._toolData = [
+      {
+        group: 'operate',
+        actived: this._toolOperateActived,
+        btns: [
+          {
+            action: 'move',
+          },
+          {
+            action: 'add',
+          },
+        ],
+      },
+    ];
+
+    this._world.toolAction({
+      group: 'operate',
+      actived: this._toolOperateActived,
+      btns: [
+        {
+          action: 'move',
+        },
+      ],
+    });
+  }
+
+  private _init(): void {
+    if (!this.glb) return;
+    if (this._world) this._world.dispose();
+
+    this._world = new World(
+      this.view,
+      this.axes,
+      this.points,
+      this._canvas,
+      this._mainView,
+      this._secondView,
+      this._controlView
+    );
+
+    this._world.init(this.glb, this.background);
+
+    if (this.view === 'read') {
+      this._toolData = [];
+      this._world.toolAction({
+        group: 'operate',
+        actived: 'move',
+        btns: [
+          {
+            action: 'move',
+          },
+        ],
+      });
+    } else if (this.view === 'edit') {
+      this._setEditAction();
+    } else if (this.view === 'config') {
+      this._toolData = [
+        {
+          group: 'setting',
+          actived: this.axes.visible ? 'axes' : '',
+          btns: [
+            {
+              action: 'axes',
+            },
+          ],
+        },
+      ];
+
+      this._world.toolAction({
+        group: 'operate',
+        actived: 'move',
+        btns: [
+          {
+            action: 'move',
+          },
+        ],
+      });
+    }
+  }
+
+  public addPoint(point: Point) {
+    this._world.addPoint(point);
+  }
+
+  public removePoint(point: Point) {
+    this._world.removePoint(point);
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+
+    emitter.on('on-point-create', (point: any) => {
+      const detail = { point };
+      const event = new CustomEvent('point-create', {
+        detail,
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+      });
+      this.dispatchEvent(event);
+    });
+
+    emitter.on('on-point-selected', (point: any) => {
+      let detail: any = { point: null };
+      if (point.userData) {
+        const { _id } = point.userData;
+        const p = this.points.find((it: any) => it.userData._id === _id);
+        detail = { point: p };
+      }
+
+      const event = new CustomEvent('point-selected', {
+        detail,
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+      });
+      this.dispatchEvent(event);
+    });
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    emitter.off('on-point-create');
+    emitter.off('on-point-selected');
+  }
+
+  protected willUpdate(
+    changedProperties: Map<string | number | symbol, unknown>
+  ) {
+    // console.log('willUpdate', changedProperties);
+    if (
+      changedProperties.has('view') ||
+      changedProperties.has('glb') ||
+      changedProperties.has('background') ||
+      changedProperties.has('axes')
+    )
+      this._init();
+
+    // changedProperties.has('points')
   }
 
   protected render() {
@@ -185,7 +334,7 @@ export class ThreeWorld extends LitElement {
       <canvas class="three-world"></canvas>
       <div class="split">
         <div class="main-view"></div>
-        <div class="tool-wrap">
+        <div class=${this.view === 'config' ? 'tool-wrap' : 'tool-wrap hidden'}>
           <div class="second-view"></div>
           <div class="control-view"></div>
         </div>
@@ -193,5 +342,3 @@ export class ThreeWorld extends LitElement {
     `;
   }
 }
-
-export type { Tree };

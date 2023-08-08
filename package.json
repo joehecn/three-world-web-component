@@ -39,6 +39,7 @@
   "dependencies": {
     "lil-gui": "^0.18.2",
     "lit": "^2.0.2",
+    "mitt": "^3.0.1",
     "three": "^0.153.0"
   },
   "devDependencies": {

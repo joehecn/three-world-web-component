@@ -21,13 +21,6 @@ export class JTool extends LitElement {
   @property({ type: Array }) data: ToolData[] = [];
 
   protected render() {
-    // <j-btn-group>
-    //   <j-btn group="operate" action="add" actived="add"><i-add /></j-btn>
-    //   <j-btn group="operate" action="move" actived="add"><i-move /></j-btn>
-    // </j-btn-group>
-    // <j-btn-group>
-    //   <j-btn group="setting" action="axes" actived="axes"><i-axes /></j-btn>
-    // </j-btn-group>
     return html`
       ${this.data.map(
         item => html`

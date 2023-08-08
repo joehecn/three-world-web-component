@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 
+import { Group } from 'three';
 import {
   createScene,
   createLights,
@@ -13,6 +14,7 @@ import {
   AxesHelper,
   PlaneHelper,
   GridHelper,
+  ArrowHelper,
   BoxHelper,
   PickHelper,
 } from './helpers/index.js';
@@ -23,14 +25,44 @@ import {
   getUniqueResizer,
 } from './systems/index.js';
 
-import type { ToolData, Tree } from './type.js';
+import type { ToolData, Axes, Point, View } from './type.js';
 import { getUniqueGui, Gui } from './guis/index.js';
+
+import { emitter } from './emitter.js';
+
+const _imageCache = new Map();
+
+function _loadSpritePromise(imageName: string) {
+  if (_imageCache.has(imageName)) {
+    return Promise.resolve(_imageCache.get(imageName));
+  }
+
+  return new Promise(resolve => {
+    const loader = new THREE.TextureLoader();
+    const path = `/assets/sprites/${imageName}`;
+    loader.load(path, texture => {
+      _imageCache.set(imageName, texture);
+      resolve(texture);
+    });
+  });
+}
 
 function __setScissorForElement(
   canvas: HTMLCanvasElement,
-  elem: HTMLDivElement
+  elem: HTMLDivElement,
+  view: View
 ) {
   const canvasRect = canvas.getBoundingClientRect();
+
+  if (view !== 'config') {
+    return {
+      left: canvasRect.left,
+      positiveYUpBottom: canvasRect.top,
+      width: canvasRect.width,
+      height: canvasRect.height,
+    };
+  }
+
   const elemRect = elem.getBoundingClientRect();
 
   // 计算canvas的尺寸
@@ -57,11 +89,13 @@ function __setScissorForElement(
 function __getCanvasRelativePosition(
   e: MouseEvent,
   canvas: HTMLCanvasElement,
-  elem: HTMLDivElement
+  elem: HTMLDivElement,
+  view: View
 ) {
   const { left, positiveYUpBottom, width, height } = __setScissorForElement(
     canvas,
-    elem
+    elem,
+    view
   );
 
   const x = e.clientX - left;
@@ -72,13 +106,15 @@ function __getCanvasRelativePosition(
 }
 
 export class World {
+  private _view: View;
+
   private _scene: THREE.Scene;
 
   private _building!: THREE.Group;
 
   private _assets: THREE.Group;
 
-  private _tree: Tree[];
+  private _points: Point[];
 
   private _mainCamera: THREE.PerspectiveCamera;
 
@@ -94,12 +130,20 @@ export class World {
 
   private _cameraHelper: THREE.CameraHelper;
 
+  // 用于简单模拟3个坐标轴的对象.
+  // 红色代表 X 轴. 绿色代表 Y 轴. 蓝色代表 Z 轴.
   private _axesHelper: THREE.AxesHelper;
 
+  // 用于模拟平面 Plane 的辅助对象.
   private _planeHelper: THREE.PlaneHelper;
 
+  // 坐标格辅助对象. 坐标格实际上是2维线数组.
   private _gridHelper: THREE.GridHelper;
 
+  // 用于模拟方向的3维箭头对象.
+  private _arrowHelper: THREE.ArrowHelper;
+
+  // 用于图形化地展示对象世界轴心对齐的包围盒的辅助对象。
   private _boxHelper: THREE.BoxHelper | null = null;
 
   private _pickHelper: PickHelper = new PickHelper();
@@ -107,17 +151,20 @@ export class World {
   private _gui: Gui | null = null;
 
   constructor(
+    view: View,
+    axes: Axes,
+    points: Point[],
     canvas: HTMLCanvasElement,
     mainView: HTMLDivElement,
     secondView: HTMLDivElement,
-    controlView: HTMLDivElement,
-    assets: THREE.Group,
-    tree: Tree[]
+    controlView: HTMLDivElement
   ) {
+    this._view = view;
+    this._assets = new Group();
+    this._points = points;
+
     this._mainView = mainView;
     this._secondView = secondView;
-    this._assets = assets;
-    this._tree = tree;
 
     this._renderer = createRenderer(canvas);
     this._scene = createScene();
@@ -126,34 +173,37 @@ export class World {
 
     const { width, height } = __setScissorForElement(
       this._renderer.domElement,
-      this._mainView
+      this._mainView,
+      this._view
     );
 
     const aspect = width / height;
 
     this._mainCamera = createCamera(
-      [75, aspect, 1, 300] // option: [fov, aspect, near, far]
+      [45, aspect, 2, 10], // option: [fov, aspect, near, far]
+      [4, 4, 4]
     );
 
     this._secondCamera = createCamera(
-      [120, aspect, 1, 300], // option: [fov, aspect, near, far]
-      [-90, 300, 30] // position: [x, y, z]
+      [120, aspect, 2, 30], // option: [fov, aspect, near, far]
+      [6, 6, 6] // position: [x, y, z]
     );
-
-    this._gui = getUniqueGui(
-      controlView,
-      mainLight,
-      secondLight,
-      this._mainCamera,
-      tree
-    );
-    this._gui.addEventListener('gui-change', this.render.bind(this));
 
     const mainControls = createControls(this._mainCamera, mainView);
     mainControls.addEventListener('change', this.render.bind(this));
 
-    const secondControls = createControls(this._secondCamera, secondView);
-    secondControls.addEventListener('change', this.render.bind(this));
+    if (this._view === 'config') {
+      this._gui = getUniqueGui(
+        controlView,
+        mainLight,
+        secondLight,
+        this._mainCamera
+      );
+      this._gui.addEventListener('gui-change', this.render.bind(this));
+
+      const secondControls = createControls(this._secondCamera, secondView);
+      secondControls.addEventListener('change', this.render.bind(this));
+    }
 
     const resizer = getUniqueResizer(this._renderer.domElement);
     resizer.addEventListener('resizer-render', (e: any) => {
@@ -169,16 +219,23 @@ export class World {
 
     this._lightHelper = new DirectionalLightHelper(mainLight);
     this._cameraHelper = new CameraHelper(this._mainCamera);
-    this._axesHelper = new AxesHelper(500);
-    this._axesHelper.visible = false;
+    this._axesHelper = new AxesHelper(axes.size);
+    this._axesHelper.visible = axes.visible;
 
-    this._planeHelper = new PlaneHelper(new THREE.Plane(), 1);
+    this._planeHelper = new PlaneHelper(new THREE.Plane());
     this._planeHelper.visible = false;
 
-    this._gridHelper = new GridHelper(10, 10);
+    this._gridHelper = new GridHelper(4, 4);
     this._gridHelper.matrix.makeRotationX(Math.PI / 2);
     this._gridHelper.matrixAutoUpdate = false;
     this._planeHelper.add(this._gridHelper);
+
+    this._arrowHelper = new ArrowHelper(
+      new THREE.Vector3(),
+      new THREE.Vector3(),
+      0.08
+    );
+    this._arrowHelper.visible = false;
 
     this._scene.add(
       mainLight,
@@ -187,13 +244,19 @@ export class World {
       this._cameraHelper,
       this._axesHelper,
       this._planeHelper,
+      this._arrowHelper,
       this._assets
     );
   }
 
   private __setPick = (e: MouseEvent) => {
     const canvas = this._renderer.domElement;
-    const pos = __getCanvasRelativePosition(e, canvas, this._mainView);
+    const pos = __getCanvasRelativePosition(
+      e,
+      canvas,
+      this._mainView,
+      this._view
+    );
 
     if (!pos) return;
 
@@ -210,6 +273,7 @@ export class World {
 
     if (!curent) {
       this._planeHelper.visible = false;
+      this._arrowHelper.visible = false;
     } else {
       const { face, object, point } = curent;
       const plane = new THREE.Plane();
@@ -236,14 +300,50 @@ export class World {
       const local = this._planeHelper.worldToLocal(point.clone());
       this._gridHelper.matrix.setPosition(local);
       this._planeHelper.visible = true;
+
+      const n = new THREE.Vector3();
+      n.copy(face?.normal!);
+      n.transformDirection(matrixWorld);
+      this._arrowHelper.setDirection(n);
+      this._arrowHelper.position.copy(point);
+      this._arrowHelper.visible = true;
     }
 
     this.render();
   };
 
-  private __addObject = (e: MouseEvent) => {
+  private __genarateSprite = async (point: Point, spriteScale: number) => {
+    const { icon, _normal, _matrixWorld, _point, userData } = point;
+
+    const spriteMap = (await _loadSpritePromise(icon)) as THREE.Texture;
+    const spriteMaterial = new THREE.SpriteMaterial({ map: spriteMap });
+    const sprite = new THREE.Sprite(spriteMaterial);
+
+    const n = new THREE.Vector3().fromArray(_normal);
+    const m = new THREE.Matrix4().fromArray(_matrixWorld);
+    n.transformDirection(m);
+
+    const p = new THREE.Vector3().fromArray(_point);
+    const local = this._assets.worldToLocal(p);
+    sprite.position.copy(local);
+    sprite.position.addScaledVector(n, spriteScale);
+    sprite.scale.set(spriteScale, spriteScale, 1);
+
+    if (userData) {
+      sprite.userData = userData;
+    }
+
+    return sprite;
+  };
+
+  private __addObject = async (e: MouseEvent) => {
     const canvas = this._renderer.domElement;
-    const pos = __getCanvasRelativePosition(e, canvas, this._mainView);
+    const pos = __getCanvasRelativePosition(
+      e,
+      canvas,
+      this._mainView,
+      this._view
+    );
 
     if (!pos) return;
 
@@ -259,25 +359,30 @@ export class World {
     );
     if (!curent) return;
 
-    const { point } = curent;
+    const { face, object, point } = curent;
+    const { normal } = face!;
+    const { matrixWorld } = object;
 
-    // add object
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshPhongMaterial({
-      color: 0x00ffff,
+    const _normal = normal.toArray();
+    const _matrixWorld = matrixWorld.toArray();
+    const _point = point.toArray();
+
+    emitter.emit('on-point-create', {
+      icon: 'circular.svg',
+      _normal,
+      _matrixWorld,
+      _point,
     });
-    const cube = new THREE.Mesh(geometry, material);
-    const local = this._assets.worldToLocal(point.clone());
-    cube.position.copy(local);
-
-    this._assets.add(cube);
-
-    this.render();
   };
 
   private __selectAsset = (e: MouseEvent) => {
     const canvas = this._renderer.domElement;
-    const pos = __getCanvasRelativePosition(e, canvas, this._mainView);
+    const pos = __getCanvasRelativePosition(
+      e,
+      canvas,
+      this._mainView,
+      this._view
+    );
 
     if (!pos) return;
 
@@ -291,7 +396,17 @@ export class World {
       this._assets.children,
       this._mainCamera
     );
-    if (!curent) return;
+
+    if (!curent) {
+      if (this._boxHelper) {
+        this._boxHelper.visible = false;
+        this.render();
+        this._gui?.setCurrentGuiKey('config');
+      }
+
+      emitter.emit('on-point-selected', {});
+      return;
+    }
 
     const { object } = curent;
 
@@ -300,31 +415,91 @@ export class World {
       this._scene.add(this._boxHelper);
     } else {
       this._boxHelper.setFromObject(object);
+      this._boxHelper.visible = true;
     }
 
     this.render();
 
-    this._gui!.setCurrentGuiKey('asset');
-    this._gui!.initAssetGUI(object);
+    // 通知
+    emitter.emit('on-point-selected', {
+      // uuid: object.uuid,
+      userData: object.userData,
+    });
+
+    this._gui?.setCurrentGuiKey('asset');
+    this._gui?.initAssetGUI(object);
   };
 
-  public async init(glb: string) {
+  private async __initAssets() {
+    const _fun = async (point: Point) => {
+      const sprite = await this.__genarateSprite(point, 0.08);
+      this._assets.add(sprite);
+    };
+
+    const _promises = this._points.map(_fun);
+    // for (let i = 0, len = this._points.length; i < len; i += 1) {
+    //   const point = this._points[i];
+    //   const sprite = await this.__genarateSprite(point, 0.08)
+    //   this._assets.add(sprite);
+    // }
+    await Promise.all(_promises);
+  }
+
+  private __elseRender() {
+    const { left, positiveYUpBottom, width, height } = __setScissorForElement(
+      this._renderer.domElement,
+      this._mainView,
+      this._view
+    );
+
+    const aspect = width / height;
+
+    this._renderer.setScissor(left, positiveYUpBottom, width, height);
+    this._renderer.setViewport(left, positiveYUpBottom, width, height);
+
+    this._mainCamera.aspect = aspect;
+    this._mainCamera.updateProjectionMatrix();
+
+    this._lightHelper.visible = false;
+    this._cameraHelper.visible = false;
+
+    this._renderer.render(this._scene, this._mainCamera);
+
+    this._lightHelper.update();
+    this._cameraHelper.update();
+  }
+
+  public async addPoint(point: Point) {
+    const sprite = await this.__genarateSprite(point, 0.08);
+    this._assets.add(sprite);
+    this.render();
+  }
+
+  public removePoint(point: Point) {
+    const { _id } = point.userData!;
+    const { children } = this._assets;
+    const index = children.findIndex((it: any) => it.userData!._id === _id);
+    if (index > -1) {
+      children.splice(index, 1);
+      this.render();
+    }
+  }
+
+  public async init(glb: string, background: string) {
+    this._scene.background = new THREE.Color(background);
+
     const building = await loadBuilding(glb);
     // console.log(building); // Group
     this._building = building;
     this._scene.add(building);
+
+    await this.__initAssets();
 
     this.render();
   }
 
   public toolAction(toolData: ToolData) {
     const { group, actived } = toolData;
-
-    if (group === 'setting') {
-      this._axesHelper.visible = !!actived;
-      this.render();
-      return;
-    }
 
     if (group !== 'operate') return;
 
@@ -336,6 +511,7 @@ export class World {
       window.addEventListener('dblclick', this.__addObject);
 
       this._planeHelper.visible = true;
+      this._arrowHelper.visible = true;
       this.render();
       return;
     }
@@ -348,11 +524,39 @@ export class World {
       window.addEventListener('click', this.__selectAsset);
 
       this._planeHelper.visible = false;
+      this._arrowHelper.visible = false;
       this.render();
     }
   }
 
+  public dispose() {
+    this._renderer.dispose();
+    // this._gui?.dispose();
+    this._axesHelper.dispose();
+    this._cameraHelper.dispose();
+    this._lightHelper.dispose();
+    this._building.traverse((obj: any) => {
+      if (obj.isMesh) {
+        obj.geometry.dispose();
+        obj.material.dispose();
+      }
+    });
+    this._scene.remove(this._building);
+    this._building = null!;
+    // this._scene.dispose();
+
+    window.removeEventListener('mousemove', this.__setPick);
+    window.removeEventListener('dblclick', this.__addObject);
+    window.removeEventListener('click', this.__selectAsset);
+  }
+
   protected render() {
+    if (this._view !== 'config') {
+      this.__elseRender();
+      return;
+    }
+
+    // 启用剪刀测试
     this._renderer.setScissorTest(true);
 
     let aspect: number;
@@ -360,7 +564,8 @@ export class World {
     {
       const { left, positiveYUpBottom, width, height } = __setScissorForElement(
         this._renderer.domElement,
-        this._mainView
+        this._mainView,
+        this._view
       );
 
       aspect = width / height;
@@ -384,7 +589,8 @@ export class World {
 
       const { left, positiveYUpBottom, width, height } = __setScissorForElement(
         this._renderer.domElement,
-        this._secondView
+        this._secondView,
+        this._view
       );
 
       this._renderer.setScissor(left, positiveYUpBottom, width, height);
