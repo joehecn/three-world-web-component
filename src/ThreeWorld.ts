@@ -24,6 +24,7 @@ export class ThreeWorld extends LitElement {
         height: 100%;
         width: 100%;
         display: block;
+        position: relative;
       }
 
       .three-world {
