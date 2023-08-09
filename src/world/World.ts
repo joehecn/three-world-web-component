@@ -509,9 +509,7 @@ export class World {
     const building = await loadBuilding(`${base}${glb}`);
     const box = new THREE.Box3().setFromObject(building);
     const center = box.getCenter(new THREE.Vector3(0, 0, 0));
-    building.translateX(-center.x);
-    building.translateY(-center.y);
-    building.translateZ(-center.z);
+    building.position.set(-center.x, -center.y, -center.z);
 
     this._building = building;
     this._scene.add(building);
