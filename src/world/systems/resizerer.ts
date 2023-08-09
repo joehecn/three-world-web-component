@@ -36,11 +36,11 @@ class Resizer extends EventDispatcher {
   }
 }
 
-let _resizer!: Resizer;
+// let _resizer!: Resizer;
 
 export const getUniqueResizer = (canvas: HTMLCanvasElement) => {
-  if (!_resizer) {
-    _resizer = new Resizer(canvas);
-  }
+  // if (!_resizer) {
+  const _resizer = new Resizer(canvas);
+  // }
   return _resizer;
 };
