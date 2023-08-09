@@ -211,6 +211,7 @@ export class DemoHelper extends LitElement {
         'three-world'
       ) as ThreeWorld;
       threeWorld.removePoint(this._currentPoint);
+      this._currentPoint = null;
     }
   }
 

@@ -229,6 +229,8 @@ export class ThreeWorld extends LitElement {
     if (!this.base || !this.glb) return;
     if (this._world) this._world.dispose();
 
+    // console.log('ThreeWorld._init', this.axes);
+
     this._world = new World(
       this.view,
       this.axes,
@@ -335,12 +337,15 @@ export class ThreeWorld extends LitElement {
       changedProperties.has('base') ||
       changedProperties.has('glb') ||
       changedProperties.has('background') ||
-      changedProperties.has('axes') ||
+      // changedProperties.has('axes') ||
       changedProperties.has('icon')
-    )
+    ) {
       if (!this._canvas) return;
 
-    this._init();
+      this._init();
+    } else if (changedProperties.has('axes')) {
+      this._world.updateAxes(this.axes);
+    }
   }
 
   protected render() {

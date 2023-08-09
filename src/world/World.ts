@@ -249,6 +249,7 @@ export class World {
     this._cameraHelper = new CameraHelper(this._mainCamera);
     this._axesHelper = new AxesHelper(axes.size);
     this._axesHelper.visible = axes.visible;
+    // console.log('set _axesHelper visible:', this._axesHelper.visible);
 
     this._planeHelper = new PlaneHelper(new THREE.Plane());
     this._planeHelper.visible = false;
@@ -494,6 +495,11 @@ export class World {
     const index = children.findIndex((it: any) => it.userData!._id === _id);
     if (index > -1) {
       children.splice(index, 1);
+
+      if (this._boxHelper) {
+        this._boxHelper.visible = false;
+      }
+
       this.render();
     }
   }
@@ -517,6 +523,14 @@ export class World {
 
     await this.__initAssets(base, scale);
 
+    // console.log('init: render');
+    this.render();
+  }
+
+  public updateAxes(axes: AxesConfig) {
+    // console.log('updateAxes:', axes);
+    const { visible } = axes;
+    this._axesHelper.visible = visible;
     this.render();
   }
 
