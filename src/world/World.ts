@@ -177,6 +177,10 @@ export class World {
 
   private _gui: Gui | null = null;
 
+  private ON_POINT_CREATE!: symbol;
+
+  private ON_POINT_SELECTED!: symbol;
+
   constructor(
     view: View,
     axes: AxesConfig,
@@ -185,8 +189,13 @@ export class World {
     canvas: HTMLCanvasElement,
     mainView: HTMLDivElement,
     secondView: HTMLDivElement,
-    controlView: HTMLDivElement
+    controlView: HTMLDivElement,
+    ON_POINT_CREATE: symbol,
+    ON_POINT_SELECTED: symbol
   ) {
+    this.ON_POINT_CREATE = ON_POINT_CREATE;
+    this.ON_POINT_SELECTED = ON_POINT_SELECTED;
+
     this._view = view;
     this._assets = new Group();
     this._points = points;
@@ -391,7 +400,7 @@ export class World {
     const _matrixWorld = matrixWorld.toArray();
     const _point = point.toArray();
 
-    emitter.emit('on-point-create', {
+    emitter.emit(this.ON_POINT_CREATE, {
       icon: 'circular.svg',
       _normal,
       _matrixWorld,
@@ -423,7 +432,7 @@ export class World {
         this._gui?.setCurrentGuiKey('config');
       }
 
-      emitter.emit('on-point-selected', {});
+      emitter.emit(this.ON_POINT_SELECTED, {});
       return;
     }
 
@@ -440,7 +449,7 @@ export class World {
     this.render();
 
     // 通知
-    emitter.emit('on-point-selected', {
+    emitter.emit(this.ON_POINT_SELECTED, {
       // uuid: object.uuid,
       userData: object.userData,
     });

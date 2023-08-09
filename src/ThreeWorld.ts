@@ -92,6 +92,10 @@ export class ThreeWorld extends LitElement {
 
   private _toolOperateActived: 'move' | 'add' = 'move';
 
+  private ON_POINT_CREATE = Symbol('on-point-create');
+
+  private ON_POINT_SELECTED = Symbol('on-point-selected');
+
   @state()
   _toolData: ToolData[] = [
     // {
@@ -243,7 +247,9 @@ export class ThreeWorld extends LitElement {
       this._canvas,
       this._mainView,
       this._secondView,
-      this._controlView
+      this._controlView,
+      this.ON_POINT_CREATE,
+      this.ON_POINT_SELECTED
     );
 
     this._world.init(this.base, this.icon.scale, this.glb, this.background);
@@ -297,7 +303,8 @@ export class ThreeWorld extends LitElement {
   connectedCallback() {
     super.connectedCallback();
 
-    emitter.on('on-point-create', (point: any) => {
+    emitter.on(this.ON_POINT_CREATE, (point: any) => {
+      // console.log('ON_POINT_CREATE', point);
       const detail = { point };
       const event = new CustomEvent('point-create', {
         detail,
@@ -308,7 +315,8 @@ export class ThreeWorld extends LitElement {
       this.dispatchEvent(event);
     });
 
-    emitter.on('on-point-selected', (point: any) => {
+    emitter.on(this.ON_POINT_SELECTED, (point: any) => {
+      // console.log('ON_POINT_SELECTED', point);
       let detail: any = { point: null };
       if (point.userData) {
         const { _id } = point.userData;
@@ -328,8 +336,8 @@ export class ThreeWorld extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    // emitter.off('on-point-create');
-    // emitter.off('on-point-selected');
+    emitter.off(this.ON_POINT_CREATE);
+    emitter.off(this.ON_POINT_SELECTED);
   }
 
   protected willUpdate(
