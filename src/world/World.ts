@@ -56,8 +56,8 @@ function __setScissorForElement(
 
   if (view !== 'config') {
     return {
-      left: canvasRect.left,
-      positiveYUpBottom: canvasRect.top,
+      left: 0,
+      positiveYUpBottom: 0,
       width: canvasRect.width,
       height: canvasRect.height,
     };
@@ -495,7 +495,12 @@ export class World {
     this._scene.background = new THREE.Color(background);
 
     const building = await loadBuilding(`${base}${glb}`);
-    // console.log(building); // Group
+    const box = new THREE.Box3().setFromObject(building);
+    const center = box.getCenter(new THREE.Vector3(0, 0, 0));
+    building.translateX(-center.x);
+    building.translateY(-center.y);
+    building.translateZ(-center.z);
+
     this._building = building;
     this._scene.add(building);
 
@@ -541,12 +546,12 @@ export class World {
     this._axesHelper.dispose();
     this._cameraHelper.dispose();
     this._lightHelper.dispose();
-    this._building.traverse((obj: any) => {
-      if (obj.isMesh) {
-        obj.geometry.dispose();
-        obj.material.dispose();
-      }
-    });
+    // this._building.traverse((obj: any) => {
+    //   if (obj.isMesh) {
+    //     obj.geometry.dispose();
+    //     obj.material.dispose();
+    //   }
+    // });
     this._scene.remove(this._building);
     this._building = null!;
     // this._scene.dispose();

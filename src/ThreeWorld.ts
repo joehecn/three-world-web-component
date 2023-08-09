@@ -338,9 +338,9 @@ export class ThreeWorld extends LitElement {
       changedProperties.has('axes') ||
       changedProperties.has('icon')
     )
-      this._init();
+      if (!this._canvas) return;
 
-    // changedProperties.has('points')
+    this._init();
   }
 
   protected render() {

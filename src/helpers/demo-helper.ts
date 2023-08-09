@@ -14,6 +14,34 @@ function _getItem() {
 @customElement('demo-helper')
 export class DemoHelper extends LitElement {
   static styles = css`
+    .three-world-wrap {
+      display: flex;
+      flex-direction: column;
+
+      height: 100%;
+    }
+
+    .wrap-head {
+      height: 60px;
+      background-color: #000;
+      flex: none;
+    }
+
+    .wrap-main {
+      display: flex;
+      flex: auto;
+    }
+
+    .wrap-slide {
+      width: 360px;
+      background-color: #000;
+      flex: none;
+    }
+
+    .wrap-container {
+      flex: auto;
+    }
+
     .helper-view {
       position: fixed;
       top: 0;
@@ -227,18 +255,26 @@ export class DemoHelper extends LitElement {
 
   render() {
     return html`
-      <three-world
-        .view=${this._view}
-        .base=${this._base}
-        .glb=${this._glb}
-        .background=${this._background}
-        .axes=${this._axes}
-        .icon=${this._icon}
-        .points=${this._points}
-        @point-create=${this.handlePointCreate}
-        @point-selected=${this.handlePointSelected}
-        @axes-setting-changed=${this.handleAxesSettingChanged}
-      ></three-world>
+      <div class="three-world-wrap">
+        <div class="wrap-head"></div>
+        <div class="wrap-main">
+          <div class="wrap-slide"></div>
+          <div class="wrap-container">
+            <three-world
+              .view=${this._view}
+              .base=${this._base}
+              .glb=${this._glb}
+              .background=${this._background}
+              .axes=${this._axes}
+              .icon=${this._icon}
+              .points=${this._points}
+              @point-create=${this.handlePointCreate}
+              @point-selected=${this.handlePointSelected}
+              @axes-setting-changed=${this.handleAxesSettingChanged}
+            ></three-world>
+          </div>
+        </div>
+      </div>
       <div
         class=${this._helperDrawerOpen ? 'helper-drawer open' : 'helper-drawer'}
       >
