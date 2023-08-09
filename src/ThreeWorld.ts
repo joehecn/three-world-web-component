@@ -324,8 +324,8 @@ export class ThreeWorld extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    emitter.off('on-point-create');
-    emitter.off('on-point-selected');
+    // emitter.off('on-point-create');
+    // emitter.off('on-point-selected');
   }
 
   protected willUpdate(
