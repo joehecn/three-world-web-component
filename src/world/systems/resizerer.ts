@@ -10,14 +10,28 @@ class Resizer extends EventDispatcher {
 
     this._canvas = canvas;
 
-    // resize if the window is resized
-    window.addEventListener('resize', () => {
-      this._dispatch(true);
+    // // resize if the window is resized
+    // window.addEventListener('resize', () => {
+    //   this._dispatch(true);
+    // });
+
+    const resizeObserver = new ResizeObserver(entries => {
+      // console.log('resizeObserver 1', entries);
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width && height) {
+          // console.log('resizeObserver 2', width, height);
+          this._dispatch(true);
+        }
+      }
     });
+    resizeObserver.observe(this._canvas.parentElement!);
   }
 
   private _dispatch(needRender: boolean) {
-    const { width, height, clientWidth, clientHeight } = this._canvas;
+    const { clientWidth, clientHeight } = this._canvas.parentElement!;
+    const { width, height } = this._canvas;
+    // console.log('resizer', width, height, clientWidth, clientHeight);
     const needResize = width !== clientWidth || height !== clientHeight;
     if (needResize) {
       this.dispatchEvent({
@@ -36,11 +50,11 @@ class Resizer extends EventDispatcher {
   }
 }
 
-// let _resizer!: Resizer;
+let _resizer!: Resizer;
 
 export const getUniqueResizer = (canvas: HTMLCanvasElement) => {
-  // if (!_resizer) {
-  const _resizer = new Resizer(canvas);
-  // }
+  if (!_resizer) {
+    _resizer = new Resizer(canvas);
+  }
   return _resizer;
 };

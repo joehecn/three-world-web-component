@@ -240,6 +240,7 @@ export class World {
         clientHeight: number;
         needRender: boolean;
       };
+      // console.log('resizer-render:', clientWidth, clientHeight);
       this._renderer.setSize(clientWidth, clientHeight, false);
       if (needRender) this.render();
     });
@@ -629,16 +630,20 @@ export class World {
         this._view
       );
 
-      this._renderer.setScissor(left, positiveYUpBottom, width, height);
-      this._renderer.setViewport(left, positiveYUpBottom, width, height);
+      // console.log('secondView:', left, positiveYUpBottom, width, height);
 
-      this._secondCamera.aspect = aspect;
-      this._secondCamera.updateProjectionMatrix();
+      if (left > 0) {
+        this._renderer.setScissor(left, positiveYUpBottom, width, height);
+        this._renderer.setViewport(left, positiveYUpBottom, width, height);
 
-      this._lightHelper.visible = true;
-      this._cameraHelper.visible = true;
+        this._secondCamera.aspect = aspect;
+        this._secondCamera.updateProjectionMatrix();
 
-      this._renderer.render(this._scene, this._secondCamera);
+        this._lightHelper.visible = true;
+        this._cameraHelper.visible = true;
+
+        this._renderer.render(this._scene, this._secondCamera);
+      }
     }
 
     this._lightHelper.update();

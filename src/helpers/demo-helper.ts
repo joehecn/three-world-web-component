@@ -15,10 +15,10 @@ function _getItem() {
 export class DemoHelper extends LitElement {
   static styles = css`
     .three-world-wrap {
+      height: 100%;
       display: flex;
       flex-direction: column;
-
-      height: 100%;
+      overflow: auto;
     }
 
     .wrap-head {
@@ -30,6 +30,7 @@ export class DemoHelper extends LitElement {
     .wrap-main {
       display: flex;
       flex: auto;
+      overflow: auto;
     }
 
     .wrap-slide {
@@ -40,6 +41,7 @@ export class DemoHelper extends LitElement {
 
     .wrap-container {
       flex: auto;
+      overflow: hidden;
     }
 
     .helper-view {
