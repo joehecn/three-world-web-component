@@ -5,6 +5,8 @@ import { EventDispatcher } from 'three';
 class Resizer extends EventDispatcher {
   private _canvas: HTMLCanvasElement;
 
+  private _resizeObserver!: ResizeObserver;
+
   constructor(canvas: HTMLCanvasElement) {
     super();
 
@@ -15,7 +17,7 @@ class Resizer extends EventDispatcher {
     //   this._dispatch(true);
     // });
 
-    const resizeObserver = new ResizeObserver(entries => {
+    this._resizeObserver = new ResizeObserver(entries => {
       // console.log('resizeObserver 1', entries);
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
@@ -25,7 +27,7 @@ class Resizer extends EventDispatcher {
         }
       }
     });
-    resizeObserver.observe(this._canvas.parentElement!);
+    this._resizeObserver.observe(this._canvas.parentElement!);
   }
 
   private _dispatch(needRender: boolean) {
@@ -48,13 +50,19 @@ class Resizer extends EventDispatcher {
   public init() {
     this._dispatch(false);
   }
+
+  public destroy() {
+    this._resizeObserver.disconnect();
+  }
 }
 
 let _resizer!: Resizer;
 
 export const getUniqueResizer = (canvas: HTMLCanvasElement) => {
-  if (!_resizer) {
-    _resizer = new Resizer(canvas);
+  if (_resizer) {
+    _resizer.destroy();
   }
+
+  _resizer = new Resizer(canvas);
   return _resizer;
 };
