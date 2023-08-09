@@ -47,6 +47,35 @@ function _loadSpritePromise(base: string, imageName: string) {
   });
 }
 
+function __setScissorForElement2(
+  canvas: HTMLCanvasElement,
+  elem: HTMLDivElement
+) {
+  const canvasRect = canvas.getBoundingClientRect();
+
+  const elemRect = elem.getBoundingClientRect();
+
+  // 计算canvas的尺寸
+  const right = Math.min(elemRect.right, canvasRect.right) - canvasRect.left;
+  const left = Math.max(0, elemRect.left - canvasRect.left);
+  const bottom = Math.min(elemRect.bottom, canvasRect.bottom) - canvasRect.top;
+  const top = Math.max(0, elemRect.top - canvasRect.top);
+
+  const width = Math.min(canvasRect.width, right - left);
+  const height = Math.min(canvasRect.height, bottom - top);
+
+  // 设置剪函数以仅渲染一部分场景
+  // const positiveYUpBottom = canvasRect.height - bottom;
+
+  // 返回aspect
+  return {
+    left: canvasRect.left,
+    positiveYUpBottom: canvasRect.top,
+    width,
+    height,
+  };
+}
+
 function __setScissorForElement(
   canvas: HTMLCanvasElement,
   elem: HTMLDivElement,
@@ -89,13 +118,11 @@ function __setScissorForElement(
 function __getCanvasRelativePosition(
   e: MouseEvent,
   canvas: HTMLCanvasElement,
-  elem: HTMLDivElement,
-  view: View
+  elem: HTMLDivElement
 ) {
-  const { left, positiveYUpBottom, width, height } = __setScissorForElement(
+  const { left, positiveYUpBottom, width, height } = __setScissorForElement2(
     canvas,
-    elem,
-    view
+    elem
   );
 
   const x = e.clientX - left;
@@ -252,12 +279,7 @@ export class World {
 
   private __setPick = (e: MouseEvent) => {
     const canvas = this._renderer.domElement;
-    const pos = __getCanvasRelativePosition(
-      e,
-      canvas,
-      this._mainView,
-      this._view
-    );
+    const pos = __getCanvasRelativePosition(e, canvas, this._mainView);
 
     if (!pos) return;
 
@@ -343,12 +365,7 @@ export class World {
 
   private __addObject = async (e: MouseEvent) => {
     const canvas = this._renderer.domElement;
-    const pos = __getCanvasRelativePosition(
-      e,
-      canvas,
-      this._mainView,
-      this._view
-    );
+    const pos = __getCanvasRelativePosition(e, canvas, this._mainView);
 
     if (!pos) return;
 
@@ -382,12 +399,7 @@ export class World {
 
   private __selectAsset = (e: MouseEvent) => {
     const canvas = this._renderer.domElement;
-    const pos = __getCanvasRelativePosition(
-      e,
-      canvas,
-      this._mainView,
-      this._view
-    );
+    const pos = __getCanvasRelativePosition(e, canvas, this._mainView);
 
     if (!pos) return;
 
