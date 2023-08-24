@@ -215,15 +215,16 @@ export class World {
     );
 
     const aspect = width / height;
-
+    // 主相机
     this._mainCamera = createCamera(
-      [45, aspect, 2, 10], // option: [fov, aspect, near, far]
-      [4, 4, 4]
+      [45, aspect, 3, 1000], // option: [fov, aspect, near, far] 相机
+      [300, 300, 0], // x,y,z 坐标系的位置
+      [0, 0, 1] // up 代表哪个轴朝上的位置
     );
-
+    // 副相机
     this._secondCamera = createCamera(
-      [120, aspect, 2, 30], // option: [fov, aspect, near, far]
-      [6, 6, 6] // position: [x, y, z]
+      [200, aspect, 1, 1000], // option: [fov, aspect, near, far]
+      [200, 200, 200] // position: [x, y, z]
     );
 
     const mainControls = createControls(this._mainCamera, mainView);
