@@ -15,7 +15,7 @@
     "threejs"
   ],
   "author": "leanbrown@live.cn",
-  "version": "0.0.51",
+  "version": "0.0.52",
   "main": "dist/src/index.js",
   "module": "dist/src/index.js",
   "exports": {
