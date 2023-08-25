@@ -24,3 +24,33 @@ export type Point = {
 };
 
 export type View = 'read' | 'edit' | 'config';
+
+export type ModelConfig = {
+  mainLightConfig: {
+    color: string;
+    position: {
+      x: number;
+      y: number;
+      z: number;
+    };
+    intensity: number;
+  };
+  secondLightConfig: {
+    color: string;
+    groundColor: string;
+    intensity: number;
+  };
+  mainCameraConfig: {
+    fov: number;
+    near: number;
+    far: number;
+    position: [number, number, number];
+    up: [number, number, number];
+  };
+  secondCameraConfig: {
+    fov: number;
+    near: number;
+    far: number;
+    position: [number, number, number];
+  };
+};

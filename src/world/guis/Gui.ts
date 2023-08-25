@@ -12,7 +12,8 @@ export class Gui extends EventDispatcher {
     controlView: HTMLDivElement,
     mainLight: THREE.DirectionalLight,
     secondLight: THREE.HemisphereLight,
-    mainCamera: THREE.PerspectiveCamera
+    mainCamera: THREE.PerspectiveCamera,
+    secondCamera: THREE.PerspectiveCamera
   ) {
     super();
 
@@ -20,7 +21,8 @@ export class Gui extends EventDispatcher {
       controlView,
       mainLight,
       secondLight,
-      mainCamera
+      mainCamera,
+      secondCamera
     );
     configGUI.show();
     this._guiMap.set('config', configGUI);

@@ -4,6 +4,7 @@ import { customElement, query, state } from 'lit/decorators.js';
 import '../three-world.js';
 import type { AxesConfig, IconConfig, Point, View } from '../world/index.js';
 import { ThreeWorld } from '../ThreeWorld.js';
+import { ModelConfig } from '../world/type.js';
 
 function _getItem() {
   const key = localStorage.getItem('three-config');
@@ -126,6 +127,37 @@ export class DemoHelper extends LitElement {
 
   @state()
   _errorMsg = '';
+
+  @state()
+  _modelConfig: ModelConfig = {
+    mainLightConfig: {
+      color: 'ffffff',
+      position: {
+        x: 10,
+        y: 10,
+        z: 10,
+      },
+      intensity: 1,
+    },
+    secondLightConfig: {
+      color: 'cccccc',
+      groundColor: '999999',
+      intensity: 1,
+    },
+    mainCameraConfig: {
+      fov: 45,
+      near: 1,
+      far: 800,
+      position: [200, 200, 200],
+      up: [1, 0, 0],
+    },
+    secondCameraConfig: {
+      fov: 45,
+      near: 0.1,
+      far: 1000,
+      position: [300, 300, 300],
+    },
+  };
 
   @query('#config-textarea')
   _configTextarea!: HTMLTextAreaElement;
@@ -256,8 +288,18 @@ export class DemoHelper extends LitElement {
     this._saveConfig();
   }
 
+  save() {
+    // 查找 three-world 组件, 调用 addPoint 方法
+    const threeWorld = this.shadowRoot?.querySelector(
+      'three-world'
+    ) as ThreeWorld;
+    const config = threeWorld.getConfigData();
+    console.log(config);
+  }
+
   render() {
     return html`
+      <button @click="${this.save}">save</button>
       <div class="three-world-wrap">
         <div class="wrap-head"></div>
         <div class="wrap-main">
@@ -271,6 +313,7 @@ export class DemoHelper extends LitElement {
               .axes=${this._axes}
               .icon=${this._icon}
               .points=${this._points}
+              .modelConfig=${this._modelConfig}
               @point-create=${this.handlePointCreate}
               @point-selected=${this.handlePointSelected}
               @axes-setting-changed=${this.handleAxesSettingChanged}

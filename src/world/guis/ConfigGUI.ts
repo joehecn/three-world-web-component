@@ -11,7 +11,8 @@ export class ConfigGUI extends EventDispatcher {
     controlView: HTMLDivElement,
     mainLight: THREE.DirectionalLight,
     secondLight: THREE.HemisphereLight,
-    mainCamera: THREE.PerspectiveCamera
+    mainCamera: THREE.PerspectiveCamera,
+    secondCamera: THREE.PerspectiveCamera
   ) {
     super();
 
@@ -62,6 +63,7 @@ export class ConfigGUI extends EventDispatcher {
     const minMaxGUIHelper = new MinMaxGUIHelper(mainCamera, 'near', 'far', 0.1);
 
     const cameraFolder = gui.addFolder('Camera');
+
     // Option
     const cameraOptionFolder = cameraFolder.addFolder('Option');
     cameraOptionFolder
@@ -72,7 +74,7 @@ export class ConfigGUI extends EventDispatcher {
       .name('near')
       .onChange(this._dispatch.bind(this));
     cameraOptionFolder
-      .add(minMaxGUIHelper, 'max', 0.1, 600, 0.1)
+      .add(minMaxGUIHelper, 'max', 0.1, 1000, 0.1)
       .name('far')
       .onChange(this._dispatch.bind(this));
     // Position
@@ -85,6 +87,50 @@ export class ConfigGUI extends EventDispatcher {
       .onChange(this._dispatch.bind(this));
     cameraPositionFolder
       .add(mainCamera.position, 'z', -300, 300, 0.1)
+      .onChange(this._dispatch.bind(this));
+    // up
+    const cameraUpFolder = cameraFolder.addFolder('Up');
+    cameraUpFolder
+      .add(mainCamera.up, 'x', 0, 1, 1)
+      .onChange(this._dispatch.bind(this));
+    cameraUpFolder
+      .add(mainCamera.up, 'y', 0, 1, 1)
+      .onChange(this._dispatch.bind(this));
+    cameraUpFolder
+      .add(mainCamera.up, 'z', 0, 1, 1)
+      .onChange(this._dispatch.bind(this));
+
+    const minMaxGUIHelper2 = new MinMaxGUIHelper(
+      secondCamera,
+      'near',
+      'far',
+      0.1
+    );
+    const secondCameraFolder = gui.addFolder('secondCamera');
+
+    // Option
+    const secondCameraOptionFolder = secondCameraFolder.addFolder('Option');
+    secondCameraOptionFolder
+      .add(secondCamera, 'fov', 1, 180)
+      .onChange(this._dispatch.bind(this));
+    secondCameraOptionFolder
+      .add(minMaxGUIHelper2, 'min', 0.1, 10, 0.1)
+      .name('near')
+      .onChange(this._dispatch.bind(this));
+    secondCameraOptionFolder
+      .add(minMaxGUIHelper2, 'max', 0.1, 1000, 0.1)
+      .name('far')
+      .onChange(this._dispatch.bind(this));
+    // Position
+    const secondCameraPositionFolder = secondCameraFolder.addFolder('Position');
+    secondCameraPositionFolder
+      .add(secondCamera.position, 'x', -300, 300, 0.1)
+      .onChange(this._dispatch.bind(this));
+    secondCameraPositionFolder
+      .add(secondCamera.position, 'y', -300, 300, 0.1)
+      .onChange(this._dispatch.bind(this));
+    secondCameraPositionFolder
+      .add(secondCamera.position, 'z', -300, 300, 0.1)
       .onChange(this._dispatch.bind(this));
   }
 

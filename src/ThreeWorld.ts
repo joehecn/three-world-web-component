@@ -15,6 +15,7 @@ import {
 import { lilStyles } from './css/lil-gui.js';
 
 import './tool/index.js';
+import { ModelConfig } from './world/type.js';
 
 export class ThreeWorld extends LitElement {
   static styles = [
@@ -147,6 +148,37 @@ export class ThreeWorld extends LitElement {
   // * 重要 不要在内部改变外部传入的属性
   @property({ type: Array }) points: Point[] = [];
 
+  // 传入主相机的属性
+  @property({ type: Object }) modelConfig: ModelConfig = {
+    mainLightConfig: {
+      color: '999999',
+      position: {
+        x: 2,
+        y: 6,
+        z: 0,
+      },
+      intensity: 1,
+    },
+    secondLightConfig: {
+      color: 'dddddd',
+      groundColor: '2f4f4f',
+      intensity: 1,
+    },
+    mainCameraConfig: {
+      fov: 45,
+      near: 0.1,
+      far: 1000,
+      position: [100, 100, 100],
+      up: [0, 1, 0],
+    },
+    secondCameraConfig: {
+      fov: 45,
+      near: 0.1,
+      far: 1000,
+      position: [100, 100, 100],
+    },
+  };
+
   @query('.three-world')
   _canvas!: HTMLCanvasElement;
 
@@ -244,6 +276,7 @@ export class ThreeWorld extends LitElement {
       this.axes,
       this.icon,
       this.points,
+      this.modelConfig,
       this._canvas,
       this._mainView,
       this._secondView,
@@ -300,6 +333,10 @@ export class ThreeWorld extends LitElement {
     this._world.removePoint(point);
   }
 
+  public getConfigData() {
+    return this._world.getConfigData();
+  }
+
   connectedCallback() {
     super.connectedCallback();
 
@@ -349,7 +386,7 @@ export class ThreeWorld extends LitElement {
       changedProperties.has('base') ||
       changedProperties.has('glb') ||
       changedProperties.has('background') ||
-      // changedProperties.has('axes') ||
+      changedProperties.has('modelConfig') ||
       changedProperties.has('icon')
     ) {
       if (!this._canvas) return;

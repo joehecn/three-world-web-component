@@ -25,7 +25,14 @@ import {
   getUniqueResizer,
 } from './systems/index.js';
 
-import type { ToolData, AxesConfig, IconConfig, Point, View } from './type.js';
+import type {
+  ToolData,
+  AxesConfig,
+  IconConfig,
+  Point,
+  View,
+  ModelConfig,
+} from './type.js';
 import { getUniqueGui, Gui } from './guis/index.js';
 
 import { emitter } from './emitter.js';
@@ -143,6 +150,15 @@ export class World {
 
   private _points: Point[];
 
+  // 主光源
+  private _mainLight: THREE.DirectionalLight;
+
+  // 副光源
+  private _secondLight: THREE.HemisphereLight;
+
+  // 模型配置
+  // private _modelConfig!: ModelConfig;
+
   private _mainCamera: THREE.PerspectiveCamera;
 
   private _secondCamera: THREE.PerspectiveCamera;
@@ -186,6 +202,7 @@ export class World {
     axes: AxesConfig,
     icon: IconConfig,
     points: Point[],
+    modelConfig: ModelConfig,
     canvas: HTMLCanvasElement,
     mainView: HTMLDivElement,
     secondView: HTMLDivElement,
@@ -199,6 +216,15 @@ export class World {
     this._view = view;
     this._assets = new Group();
     this._points = points;
+    // this._modelConfig = modelConfig;
+
+    // 获取主光源，副光源，主相机，副相机的配置
+    const {
+      mainLightConfig,
+      secondLightConfig,
+      mainCameraConfig,
+      secondCameraConfig,
+    } = modelConfig;
 
     this._mainView = mainView;
     this._secondView = secondView;
@@ -208,6 +234,9 @@ export class World {
 
     const { mainLight, secondLight } = createLights();
 
+    this._mainLight = mainLight;
+    this._secondLight = secondLight;
+
     const { width, height } = __setScissorForElement(
       this._renderer.domElement,
       this._mainView,
@@ -216,16 +245,48 @@ export class World {
 
     const aspect = width / height;
     // 主相机
+    // [45, aspect, 0.1, 1000], // option: [fov, aspect, near, far] 相机
+    // [300, 300, 0], // x,y,z 坐标系的位置
+    // [0, 0, 1] // up 代表哪个轴朝上的位置
     this._mainCamera = createCamera(
-      [45, aspect, 0.1, 1000], // option: [fov, aspect, near, far] 相机
-      [300, 300, 0], // x,y,z 坐标系的位置
-      [0, 0, 1] // up 代表哪个轴朝上的位置
+      [
+        mainCameraConfig.fov,
+        aspect,
+        mainCameraConfig.near,
+        mainCameraConfig.far,
+      ],
+      mainCameraConfig.position,
+      mainCameraConfig.up
     );
     // 副相机
+    // [200, aspect, 1, 1000], // option: [fov, aspect, near, far]
+    // [200, 200, 200] // position: [x, y, z]
     this._secondCamera = createCamera(
-      [200, aspect, 1, 1000], // option: [fov, aspect, near, far]
-      [200, 200, 200] // position: [x, y, z]
+      [
+        secondCameraConfig.fov,
+        aspect,
+        secondCameraConfig.near,
+        secondCameraConfig.far,
+      ],
+      secondCameraConfig.position
     );
+
+    // 配置主灯光position
+    this._mainLight.position.set(
+      mainLightConfig.position.x,
+      mainLightConfig.position.y,
+      mainLightConfig.position.z
+    );
+    // 配置主灯光 color
+    this._mainLight.color.set(`#${mainLightConfig.color}`);
+    // 配置主灯光 intensity
+    this._mainLight.intensity = mainLightConfig.intensity;
+    // 配置副灯光 color
+    this._secondLight.color.set(`#${secondLightConfig.color}`);
+    // 配置副灯光 groundColor
+    this._secondLight.groundColor.set(`#${secondLightConfig.groundColor}`);
+    // 配置副灯光
+    this._secondLight.intensity = secondLightConfig.intensity;
 
     const mainControls = createControls(this._mainCamera, mainView);
     mainControls.addEventListener('change', this.render.bind(this));
@@ -233,9 +294,10 @@ export class World {
     if (this._view === 'config') {
       this._gui = getUniqueGui(
         controlView,
-        mainLight,
-        secondLight,
-        this._mainCamera
+        this._mainLight,
+        this._secondLight,
+        this._mainCamera,
+        this._secondCamera
       );
       this._gui.addEventListener('gui-change', this.render.bind(this));
 
@@ -256,7 +318,7 @@ export class World {
     });
     resizer.init();
 
-    this._lightHelper = new DirectionalLightHelper(mainLight);
+    this._lightHelper = new DirectionalLightHelper(this._mainLight);
     this._cameraHelper = new CameraHelper(this._mainCamera);
     this._axesHelper = new AxesHelper(axes.size);
     this._axesHelper.visible = axes.visible;
@@ -278,8 +340,8 @@ export class World {
     this._arrowHelper.visible = false;
 
     this._scene.add(
-      mainLight,
-      secondLight,
+      this._mainLight,
+      this._secondLight,
       this._lightHelper,
       this._cameraHelper,
       this._axesHelper,
@@ -513,6 +575,51 @@ export class World {
 
       this.render();
     }
+  }
+
+  // 获取模型的一些配置信息
+  public getConfigData(): ModelConfig {
+    return {
+      mainLightConfig: {
+        color: this._mainLight.color.getHexString(),
+        position: {
+          x: this._mainLight.position.x,
+          y: this._mainLight.position.y,
+          z: this._mainLight.position.z,
+        },
+        intensity: this._mainLight.intensity,
+      },
+      secondLightConfig: {
+        color: this._secondLight.color.getHexString(),
+        groundColor: this._secondLight.groundColor.getHexString(),
+        intensity: this._secondLight.intensity,
+      },
+      mainCameraConfig: {
+        fov: this._mainCamera.fov,
+        near: this._mainCamera.near,
+        far: this._mainCamera.far,
+        position: [
+          this._mainCamera.position.x,
+          this._mainCamera.position.y,
+          this._mainCamera.position.z,
+        ],
+        up: [
+          this._mainCamera.up.x,
+          this._mainCamera.up.y,
+          this._mainCamera.up.z,
+        ],
+      },
+      secondCameraConfig: {
+        fov: this._secondCamera.fov,
+        near: this._secondCamera.near,
+        far: this._secondCamera.far,
+        position: [
+          this._secondCamera.position.x,
+          this._secondCamera.position.y,
+          this._secondCamera.position.z,
+        ],
+      },
+    };
   }
 
   public async init(
