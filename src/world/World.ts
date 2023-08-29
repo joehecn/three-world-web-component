@@ -204,6 +204,8 @@ export class World {
 
   private ON_POINT_SELECTED!: symbol;
 
+  private iconScale = 1;
+
   // 当前点位信息
   private currentPointData: any;
 
@@ -226,6 +228,7 @@ export class World {
     this._view = view;
     this._assets = new Group();
     this._points = points;
+    this.iconScale = icon.scale;
     // this._modelConfig = modelConfig;
 
     // 获取主光源，副光源，主相机，副相机的配置
@@ -444,7 +447,7 @@ export class World {
     const p = new THREE.Vector3().fromArray(_point);
     const local = this._assets.worldToLocal(p);
     sprite.position.copy(local);
-    // 将所传入的v与s相乘所得的乘积和这个向量相加。
+    // 将所传入的v与s相乘所得的乘积和这个向量相加。向上偏移半个物体的距离
     sprite.position.addScaledVector(n, spriteScale / 2);
     // 将传入的标量s和这个向量的x值、y值以及z值相加。
     // sprite.position.addScalar(spriteScale);
@@ -607,6 +610,8 @@ export class World {
   public getCurrentPointInfo() {
     if (this.currentPointData) {
       const { object } = this.currentPointData;
+      // 将向上偏移半个物体的距离还原
+      object.position.addScaledVector(object.position, -this.iconScale / 2);
       const _point = this._assets.localToWorld(object.position);
       return { object, _point };
     }
