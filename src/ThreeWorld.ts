@@ -353,7 +353,7 @@ export class ThreeWorld extends LitElement {
   // 获取当前点的信息
   public getPointInfo() {
     const { object, _point } = this._world.getCurrentPointInfo();
-    let detail: any = { point: null, scale: 0.16 };
+    let detail: any = { point: null, scale: null };
     if (object && _point) {
       if (object.userData) {
         const { _id } = object.userData;
