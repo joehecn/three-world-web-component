@@ -8,7 +8,8 @@ export const getUniqueGui = (
   mainLight: THREE.DirectionalLight,
   secondLight: THREE.HemisphereLight,
   mainCamera: THREE.PerspectiveCamera,
-  secondCamera: THREE.PerspectiveCamera
+  secondCamera: THREE.PerspectiveCamera,
+  view: 'config' | 'edit' | 'read'
 ) => {
   // if (!_gui) {
   const _gui = new Gui(
@@ -16,7 +17,8 @@ export const getUniqueGui = (
     mainLight,
     secondLight,
     mainCamera,
-    secondCamera
+    secondCamera,
+    view
   );
   // }
   return _gui;

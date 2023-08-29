@@ -90,7 +90,7 @@ function __setScissorForElement(
 ) {
   const canvasRect = canvas.getBoundingClientRect();
 
-  if (view !== 'config') {
+  if (view === 'read') {
     return {
       left: 0,
       positiveYUpBottom: 0,
@@ -122,6 +122,13 @@ function __setScissorForElement(
   };
 }
 
+/**
+ * 获取相对位置
+ * @param e
+ * @param canvas
+ * @param elem
+ * @returns
+ */
 function __getCanvasRelativePosition(
   e: MouseEvent,
   canvas: HTMLCanvasElement,
@@ -196,6 +203,9 @@ export class World {
   private ON_POINT_CREATE!: symbol;
 
   private ON_POINT_SELECTED!: symbol;
+
+  // 当前点位信息
+  private currentPointData: any;
 
   constructor(
     view: View,
@@ -291,13 +301,14 @@ export class World {
     const mainControls = createControls(this._mainCamera, mainView);
     mainControls.addEventListener('change', this.render.bind(this));
 
-    if (this._view === 'config') {
+    if (this._view !== 'read') {
       this._gui = getUniqueGui(
         controlView,
         this._mainLight,
         this._secondLight,
         this._mainCamera,
-        this._secondCamera
+        this._secondCamera,
+        this._view
       );
       this._gui.addEventListener('gui-change', this.render.bind(this));
 
@@ -318,24 +329,28 @@ export class World {
     });
     resizer.init();
 
+    // 灯光辅助对象
     this._lightHelper = new DirectionalLightHelper(this._mainLight);
+    // 相机辅助对象
     this._cameraHelper = new CameraHelper(this._mainCamera);
+    // 用于简单模拟3个坐标轴的对象.
     this._axesHelper = new AxesHelper(axes.size);
     this._axesHelper.visible = axes.visible;
-    // console.log('set _axesHelper visible:', this._axesHelper.visible);
-
+    // 用于模拟平面 Plane 的辅助对象.
     this._planeHelper = new PlaneHelper(new THREE.Plane());
     this._planeHelper.visible = false;
 
+    // 网格辅助对象
     this._gridHelper = new GridHelper(4, 4);
     this._gridHelper.matrix.makeRotationX(Math.PI / 2);
     this._gridHelper.matrixAutoUpdate = false;
     this._planeHelper.add(this._gridHelper);
 
+    // 用于模拟方向的3维箭头对象.
     this._arrowHelper = new ArrowHelper(
-      new THREE.Vector3(),
-      new THREE.Vector3(),
-      icon.scale
+      new THREE.Vector3(), // 基于箭头原点的方向. 必须为单位向量.
+      new THREE.Vector3(), // 箭头的原点.
+      0.1 //  箭头的长度. 默认为 1.
     );
     this._arrowHelper.visible = false;
 
@@ -362,6 +377,7 @@ export class World {
     const y = (pos.y / pos.height) * -2 + 1;
 
     const Vector2 = new THREE.Vector2(x, y);
+    // 射线与https://threejs.org/docs/#api/en/core/Raycaster.intersectObject
     const curent = this._pickHelper.pick(
       Vector2,
       this._building.children,
@@ -372,6 +388,7 @@ export class World {
       this._planeHelper.visible = false;
       this._arrowHelper.visible = false;
     } else {
+      // face 相交的面 object 相交的面 point 世界坐标的交点  normal - 交点处的内插法向量
       const { face, object, point } = curent;
       const plane = new THREE.Plane();
 
@@ -427,7 +444,10 @@ export class World {
     const p = new THREE.Vector3().fromArray(_point);
     const local = this._assets.worldToLocal(p);
     sprite.position.copy(local);
-    sprite.position.addScaledVector(n, spriteScale);
+    // 将所传入的v与s相乘所得的乘积和这个向量相加。
+    sprite.position.addScaledVector(n, spriteScale / 2);
+    // 将传入的标量s和这个向量的x值、y值以及z值相加。
+    // sprite.position.addScalar(spriteScale);
     sprite.scale.set(spriteScale, spriteScale, 1);
 
     if (userData) {
@@ -492,8 +512,11 @@ export class World {
       if (this._boxHelper) {
         this._boxHelper.visible = false;
         this.render();
-        this._gui?.setCurrentGuiKey('config');
+        if (this._view === 'config') {
+          this._gui?.setCurrentGuiKey('config');
+        }
       }
+      // this.currentPointData = null;
 
       emitter.emit(this.ON_POINT_SELECTED, {});
       return;
@@ -517,8 +540,9 @@ export class World {
       userData: object.userData,
     });
 
-    this._gui?.setCurrentGuiKey('asset');
+    // this._gui?.setCurrentGuiKey('asset');
     this._gui?.initAssetGUI(object);
+    this.currentPointData = curent;
   };
 
   private async __initAssets(base: string, scale: number) {
@@ -575,6 +599,21 @@ export class World {
 
       this.render();
     }
+  }
+
+  /**
+   * 获取当前点位信息
+   */
+  public getCurrentPointInfo() {
+    if (this.currentPointData) {
+      const { object } = this.currentPointData;
+      const _point = this._assets.localToWorld(object.position);
+      return { object, _point };
+    }
+    return {
+      object: undefined,
+      _point: undefined,
+    };
   }
 
   // 获取模型的一些配置信息
@@ -705,7 +744,7 @@ export class World {
   }
 
   protected render() {
-    if (this._view !== 'config') {
+    if (this._view === 'read') {
       this.__elseRender();
       return;
     }

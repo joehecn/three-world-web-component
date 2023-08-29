@@ -294,7 +294,8 @@ export class DemoHelper extends LitElement {
       'three-world'
     ) as ThreeWorld;
     const config = threeWorld.getConfigData();
-    console.log(config);
+    const curentPoint = threeWorld.getPointInfo();
+    console.log({ config, curentPoint });
   }
 
   render() {

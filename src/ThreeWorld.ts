@@ -229,7 +229,7 @@ export class ThreeWorld extends LitElement {
         return;
       }
 
-      if (g === 'operate') {
+      if (g === 'operate' && this.view === 'edit') {
         this._toolOperateActived = a;
         this._setEditAction();
       }
@@ -287,6 +287,7 @@ export class ThreeWorld extends LitElement {
 
     this._world.init(this.base, this.icon.scale, this.glb, this.background);
 
+    // 设置操作按钮
     if (this.view === 'read') {
       this._toolData = [];
       this._world.toolAction({
@@ -308,6 +309,18 @@ export class ThreeWorld extends LitElement {
           btns: [
             {
               action: 'axes',
+            },
+          ],
+        },
+        {
+          group: 'operate',
+          actived: this._toolOperateActived,
+          btns: [
+            {
+              action: 'move',
+            },
+            {
+              action: 'add',
             },
           ],
         },
@@ -335,6 +348,23 @@ export class ThreeWorld extends LitElement {
 
   public getConfigData() {
     return this._world.getConfigData();
+  }
+
+  // 获取当前点的信息
+  public getPointInfo() {
+    const { object, _point } = this._world.getCurrentPointInfo();
+    let detail: any = { point: null, scale: 0.16 };
+    if (object && _point) {
+      if (object.userData) {
+        const { _id } = object.userData;
+        const p = this.points.find((it: any) => it.userData._id === _id);
+        if (p) {
+          p._point = _point.toArray();
+        }
+        detail = { point: p, scale: object.scale.x };
+      }
+    }
+    return detail;
   }
 
   connectedCallback() {
@@ -380,7 +410,6 @@ export class ThreeWorld extends LitElement {
   protected willUpdate(
     changedProperties: Map<string | number | symbol, unknown>
   ) {
-    // console.log('willUpdate', changedProperties);
     if (
       changedProperties.has('view') ||
       changedProperties.has('base') ||
@@ -407,9 +436,7 @@ export class ThreeWorld extends LitElement {
         <canvas class="three-world"></canvas>
         <div class="split">
           <div class="main-view"></div>
-          <div
-            class=${this.view === 'config' ? 'tool-wrap' : 'tool-wrap hidden'}
-          >
+          <div class=${this.view !== 'read' ? 'tool-wrap' : 'tool-wrap hidden'}>
             <div class="second-view"></div>
             <div class="control-view"></div>
           </div>

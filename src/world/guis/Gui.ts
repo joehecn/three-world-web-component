@@ -13,7 +13,8 @@ export class Gui extends EventDispatcher {
     mainLight: THREE.DirectionalLight,
     secondLight: THREE.HemisphereLight,
     mainCamera: THREE.PerspectiveCamera,
-    secondCamera: THREE.PerspectiveCamera
+    secondCamera: THREE.PerspectiveCamera,
+    view: 'config' | 'edit' | 'read'
   ) {
     super();
 
@@ -24,10 +25,14 @@ export class Gui extends EventDispatcher {
       mainCamera,
       secondCamera
     );
-    configGUI.show();
+    if (view === 'config') {
+      configGUI.show();
+    } else {
+      configGUI.hide();
+    }
     this._guiMap.set('config', configGUI);
 
-    const assetGUI = new AssetGUI(controlView);
+    const assetGUI = new AssetGUI(controlView, view);
     assetGUI.hide();
     this._guiMap.set('asset', assetGUI);
 
@@ -60,6 +65,20 @@ export class Gui extends EventDispatcher {
   }
 
   public initAssetGUI(object: THREE.Object3D) {
+    // 设置新的 GUI 并 显示
+    this._currentGuiKey = 'asset';
+    this._guiMap.get('asset').show();
     this._guiMap.get('asset').init(object as THREE.Mesh);
+  }
+
+  // 隐藏 GUI
+  public hideGUI(key: string) {
+    // 设置新的 GUI 并 显示
+    this._currentGuiKey = key;
+    // 隐藏当前的 GUI
+    const cugui = this._guiMap.get(this._currentGuiKey);
+    if (cugui) {
+      cugui.hide();
+    }
   }
 }
