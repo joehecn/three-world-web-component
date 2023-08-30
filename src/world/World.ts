@@ -429,6 +429,7 @@ export class World {
     this.render();
   };
 
+  // 设置精灵图，添加的时候偏移半个精灵图的位置
   private __genarateSprite = async (
     base: string,
     point: Point,
@@ -449,6 +450,38 @@ export class World {
     sprite.position.copy(local);
     // 将所传入的v与s相乘所得的乘积和这个向量相加。向上偏移半个物体的距离
     sprite.position.addScaledVector(n, spriteScale / 2);
+    // 将传入的标量s和这个向量的x值、y值以及z值相加。
+    // sprite.position.addScalar(spriteScale);
+    sprite.scale.set(spriteScale, spriteScale, 1);
+
+    if (userData) {
+      sprite.userData = userData;
+    }
+
+    return sprite;
+  };
+
+  // 设置精灵图，初始化的时候不偏移位置
+  private __genarateSpriteInit = async (
+    base: string,
+    point: Point,
+    spriteScale: number
+  ) => {
+    const { icon, _normal, _matrixWorld, _point, userData } = point;
+
+    const spriteMap = (await _loadSpritePromise(base, icon)) as THREE.Texture;
+    const spriteMaterial = new THREE.SpriteMaterial({ map: spriteMap });
+    const sprite = new THREE.Sprite(spriteMaterial);
+
+    const n = new THREE.Vector3().fromArray(_normal);
+    const m = new THREE.Matrix4().fromArray(_matrixWorld);
+    n.transformDirection(m);
+
+    const p = new THREE.Vector3().fromArray(_point);
+    const local = this._assets.worldToLocal(p);
+    sprite.position.copy(local);
+    // 将所传入的v与s相乘所得的乘积和这个向量相加。向上偏移半个物体的距离
+    // sprite.position.addScaledVector(n, spriteScale / 2);
     // 将传入的标量s和这个向量的x值、y值以及z值相加。
     // sprite.position.addScalar(spriteScale);
     sprite.scale.set(spriteScale, spriteScale, 1);
@@ -548,9 +581,10 @@ export class World {
     this.currentPointData = curent;
   };
 
+  // 初始化精灵图
   private async __initAssets(base: string, scale: number) {
     const _fun = async (point: Point) => {
-      const sprite = await this.__genarateSprite(base, point, scale);
+      const sprite = await this.__genarateSpriteInit(base, point, scale);
       this._assets.add(sprite);
     };
 
@@ -610,8 +644,6 @@ export class World {
   public getCurrentPointInfo() {
     if (this.currentPointData) {
       const { object } = this.currentPointData;
-      // 将向上偏移半个物体的距离还原
-      object.position.addScaledVector(object.position, -this.iconScale / 2);
       const _point = this._assets.localToWorld(object.position);
       return { object, _point };
     }

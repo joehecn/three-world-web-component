@@ -110,7 +110,7 @@ export class DemoHelper extends LitElement {
 
   @state()
   _axes: AxesConfig = {
-    size: 1,
+    size: 100,
     visible: false,
   };
 
