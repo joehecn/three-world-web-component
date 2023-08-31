@@ -369,7 +369,9 @@ export class World {
     );
   }
 
-  private __setPick = (e: MouseEvent) => {
+  private __setPick = (e: any) => {
+    // 如果点击的不是three-world 组件 则直接退出
+    if (!e.target || !e.target.closest('three-world')) return;
     const canvas = this._renderer.domElement;
     const pos = __getCanvasRelativePosition(e, canvas, this._mainView);
 
@@ -461,7 +463,9 @@ export class World {
     return sprite;
   };
 
-  private __addObject = async (e: MouseEvent) => {
+  private __addObject = async (e: any) => {
+    // 如果点击的不是three-world 组件 则直接退出
+    if (!e.target || !e.target.closest('three-world')) return;
     const canvas = this._renderer.domElement;
     const pos = __getCanvasRelativePosition(e, canvas, this._mainView);
 
@@ -500,7 +504,9 @@ export class World {
     });
   };
 
-  private __selectAsset = (e: MouseEvent) => {
+  private __selectAsset = (e: any) => {
+    // 如果点击的不是three-world 组件 则直接退出
+    if (!e.target || !e.target.closest('three-world')) return;
     const canvas = this._renderer.domElement;
     const pos = __getCanvasRelativePosition(e, canvas, this._mainView);
 
